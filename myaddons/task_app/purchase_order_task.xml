@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+        <!-- Action to open To-do Task list -->
+        <act_window id="action_task_purchase"
+                    name="Task Purchase"
+                    res_model="purchase.order"
+                    view_mode="tree,form"/>
+
+        <!-- Menu item to open To-do Task list -->
+        <menuitem id="menu_task_purchase"
+                  name="Task Purchase"
+                  parent="menu_view_base_import_task_group"
+                  sequence="20"
+                  action="action_task_purchase"/>
+
+        <record id="view_form_task_purchase" model="ir.ui.view">
+            <field name="name">Task Purchase Form</field>
+            <field name="model">purchase.order</field>
+            <field name="arch" type="xml">
+                <tree string="Task Purchase">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+    </data>
+</openerp>

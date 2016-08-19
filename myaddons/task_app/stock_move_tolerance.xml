@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <!--  Scrap move -->
+
+        <record id="view_stock_move_tolerance_wizard" model="ir.ui.view">
+            <field name="name">Tolerance Move</field>
+            <field name="model">stock.move.tolerance</field>
+            <field name="arch" type="xml">
+                <form string="Tolerance Products">
+                    <group>
+                        <field name="product_id" readonly="1"/>
+                        <label for="product_qty"/>
+                        <div>
+                            <field name="product_qty" class="oe_inline"/>
+                            <field name="product_uom" class="oe_inline" readonly="1" groups="product.group_uom"/>
+                        </div>
+                        <field name="tolerance_price" readonly="1"/>
+                        <field name="restrict_lot_id" domain="[('product_id','=',product_id)]"
+                               groups="stock.group_production_lot"
+                               context="{'default_product_id': product_id}"/>
+                        <field name="location_id" string="Tolerance Location" widget="selection"
+                               domain="[('usage','!=','view'),('scrap_location','=',True)]"
+                               groups="stock.group_locations"/>
+                    </group>
+                    <footer>
+                        <button name="move_tolerance" string="Tolerance" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="move_tolerance" model="ir.actions.act_window">
+            <field name="name">Tolerance Move</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">stock.move.tolerance</field>
+            <field name="view_id" ref="view_stock_move_tolerance_wizard"/>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'form_view_ref': False}</field>
+        </record>
+
+    </data>
+</openerp>

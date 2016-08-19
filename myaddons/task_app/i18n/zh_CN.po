@@ -1,0 +1,188 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* task_app
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-08-08 06:10+0000\n"
+"PO-Revision-Date: 2016-08-08 06:10+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: task_app
+#: view:task.import:task_app.view_base_import_task
+msgid "Cancel"
+msgstr "取消"
+
+#. module: task_app
+#: field:task.import,combine_names:0
+msgid "Combine names"
+msgstr "自动组合产品名称"
+
+#. module: task_app
+#: field:task.import,create_uid:0
+msgid "Created by"
+msgstr "Created by"
+
+#. module: task_app
+#: field:task.import,create_date:0
+msgid "Created on"
+msgstr "Created on"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:685
+#: code:addons/task_app/task_import.py:692
+#, python-format
+msgid "Database ID"
+msgstr "Database ID"
+
+#. module: task_app
+#: field:task.import,display_name:0
+msgid "Display Name"
+msgstr "Display Name"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:166
+#: code:addons/task_app/task_import.py:213
+#: code:addons/task_app/task_import.py:237
+#, python-format
+msgid "Error!"
+msgstr "Error!"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:650
+#: code:addons/task_app/task_import.py:684
+#, python-format
+msgid "External ID"
+msgstr "External ID"
+
+#. module: task_app
+#: field:task.import,filename:0
+msgid "Filename"
+msgstr "Filename"
+
+#. module: task_app
+#: field:task.import,id:0
+msgid "ID"
+msgstr "ID"
+
+#. module: task_app
+#: help:task.import,combine_names:0
+msgid "If you enable this option, product name will generate by combine stock and product type name."
+msgstr "If you enable this option, product name will generate by combine stock and product type name."
+
+#. module: task_app
+#: model:ir.actions.act_window,name:task_app.action_view_base_import_task
+#: model:ir.ui.menu,name:task_app.menu_view_base_import_task
+msgid "Import Task"
+msgstr "导入采购订单"
+
+#. module: task_app
+#: view:task.import:task_app.view_base_import_task
+msgid "Import Todo Task"
+msgstr "Import Todo Task"
+
+#. module: task_app
+#: field:task.import,import_type:0
+msgid "Import Type"
+msgstr "导入订单类型"
+
+#. module: task_app
+#: field:task.import,__last_update:0
+msgid "Last Modified on"
+msgstr "Last Modified on"
+
+#. module: task_app
+#: field:task.import,write_uid:0
+msgid "Last Updated by"
+msgstr "Last Updated by"
+
+#. module: task_app
+#: field:task.import,write_date:0
+msgid "Last Updated on"
+msgstr "Last Updated on"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:79
+#: code:addons/task_app/task_import.py:503
+#, python-format
+msgid "Not Found!"
+msgstr "Not Found!"
+
+#. module: task_app
+#: model:ir.ui.menu,name:task_app.menu_view_base_import_task_group
+msgid "Purchase Import"
+msgstr "采购批量操作"
+
+#. module: task_app
+#: model:ir.model,name:task_app.model_purchase_order
+msgid "Purchase Order"
+msgstr "采购订单"
+
+#. module: task_app
+#: selection:task.import,import_type:0
+msgid "Purchase Orders"
+msgstr "Purchase Orders"
+
+#. module: task_app
+#: selection:task.import,import_type:0
+msgid "Suppliers"
+msgstr "Suppliers"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:580
+#, python-format
+msgid "You must configure at least one field to import"
+msgstr "You must configure at least one field to import"
+
+#. module: task_app
+#: field:task.import,binary_field:0
+msgid "Your binary field"
+msgstr "导入文件"
+
+#. module: task_app
+#: view:task.import:task_app.view_base_import_task
+msgid "_Import"
+msgstr "导入"
+
+#. module: task_app
+#: view:task.import:task_app.view_base_import_task
+msgid "or"
+msgstr "or"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:237
+#, python-format
+msgid "导入文件格式不正确，数据导入失败。"
+msgstr "导入文件格式不正确，数据导入失败。"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:213
+#, python-format
+msgid "导入文件没有采购数据。"
+msgstr "导入文件没有采购数据。"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:166
+#, python-format
+msgid "导入文件缺少数据列: "
+msgstr "导入文件缺少数据列: "
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:79
+#, python-format
+msgid "没有找到对应的仓库:"
+msgstr "没有找到对应的仓库:"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:503
+#, python-format
+msgid "订单导入失败，无法找到可用journal: journal_ids"
+msgstr "订单导入失败，无法找到可用journal: journal_ids"
+
