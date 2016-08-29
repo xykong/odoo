@@ -1373,7 +1373,7 @@ class stock_picking(osv.osv):
             'product_uom_qty': qty,
             'name': _('Extra Move: ') + name,
             'state': 'draft',
-            'restrict_partner_id': op.owner_id,
+            'restrict_partner_id': op.owner_id.id,
             'group_id': picking.group_id.id,
             }
         return res
@@ -4478,11 +4478,6 @@ class stock_picking_type(osv.osv):
             name = record.name
             if record.warehouse_id:
                 name = record.warehouse_id.name + ': ' +name
-            if context.get('special_shortened_wh_name'):
-                if record.warehouse_id:
-                    name = record.warehouse_id.name
-                else:
-                    name = _('Customer') + ' (' + record.name + ')'
             res.append((record.id, name))
         return res
 
