@@ -22,6 +22,8 @@ class stock_move_tolerance(osv.osv_memory):
         'location_id': fields.many2one('stock.location', 'Location', required=True),
         'restrict_lot_id': fields.many2one('stock.production.lot', 'Lot'),
         'tolerance_price': fields.float('Price'),
+        'wipe_price': fields.float('Wipe Price'),
+
     }
 
     _defaults = {
@@ -111,6 +113,7 @@ class stock_move_tolerance(osv.osv_memory):
             po_line_obj = self.pool.get('purchase.order.line')
             tolerance = self.browse(cr, uid, ids, context=context)
 
+            # calculate 实运差额
             if move.product_qty > tolerance.product_qty:
                 product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '实运差额', 'type': 'service'},
                                                                      context=context)
@@ -120,8 +123,8 @@ class stock_move_tolerance(osv.osv_memory):
                 vals = {
                     'name': product.name,
                     'product_id': product.id,
-                    'product_qty': - abs(move.product_qty - tolerance.product_qty),
-                    'price_unit': purchase_shipping.order_line[0].price_unit,
+                    'product_qty': abs(move.product_qty - tolerance.product_qty),
+                    'price_unit': - purchase_shipping.order_line[0].price_unit,
                     'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
                     'product_uom': 1,
                     'taxes_id': [[6, False, []]],
@@ -131,6 +134,7 @@ class stock_move_tolerance(osv.osv_memory):
                 po_line_id = po_line_obj.create(cr, uid, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
+            # calculate 涨吨差额
             product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '涨吨差额', 'type': 'service'},
                                                                  context=context)
             product_obj = self.pool.get('product.template')
@@ -144,8 +148,8 @@ class stock_move_tolerance(osv.osv_memory):
             vals = {
                 'name': product.name,
                 'product_id': product.id,
-                'product_qty': - abs(move.product_qty - tolerance.product_qty),
-                'price_unit': price_rise,
+                'product_qty': abs(move.product_qty - tolerance.product_qty),
+                'price_unit': - price_rise,
                 'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'product_uom': 1,
                 'taxes_id': [[6, False, []]],
@@ -156,6 +160,7 @@ class stock_move_tolerance(osv.osv_memory):
             po_line_id = po_line_obj.create(cr, uid, vals, context=context)
             purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
+            # calculate 装卸费
             product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '装卸费', 'type': 'service'},
                                                                  context=context)
             product_obj = self.pool.get('product.template')
@@ -169,8 +174,8 @@ class stock_move_tolerance(osv.osv_memory):
             vals = {
                 'name': product.name,
                 'product_id': product.id,
-                'product_qty': -1,
-                'price_unit': loading_fee,
+                'product_qty': 1,
+                'price_unit': -loading_fee,
                 'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'product_uom': 1,
                 'taxes_id': [[6, False, []]],
@@ -180,6 +185,28 @@ class stock_move_tolerance(osv.osv_memory):
             po_line_id = po_line_obj.create(cr, uid, vals, context=context)
             purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
+            # calculate 抹零
+            if tolerance.wipe_price > 0:
+                product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '抹零', 'type': 'service'},
+                                                                     context=context)
+                product_obj = self.pool.get('product.template')
+                product = product_obj.browse(cr, uid, product_ids, context=context)
+
+                vals = {
+                    'name': product.name,
+                    'product_id': product.id,
+                    'product_qty': tolerance.wipe_price,
+                    'price_unit': -purchase_shipping.order_line[0].price_unit,
+                    'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'product_uom': 1,
+                    'taxes_id': [[6, False, []]],
+                    'account_analytic_id': False,
+                    'order_id': purchase_shipping.id,
+                }
+                po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                purchase_shipping.write({'order_line': [(4, po_line_id)]})
+
+            # finish workflow.
             purchase_obj.signal_workflow(cr, uid, [purchase_shipping.id], 'purchase_confirm')
             # purchase_obj.action_invoice_create(cr, uid, purchase_shipping.id, context=context)
 
@@ -248,5 +275,8 @@ class stock_move_tolerance(osv.osv_memory):
         self.tolerance_price = min(move.product_qty, self.product_qty) * purchase_shipping.order_line[
             0].price_unit - abs(
             move.product_qty - self.product_qty) * price_rise - loading_fee
+
+        self.wipe_price = self.tolerance_price - math.floor(self.tolerance_price / 10) * 10
+        self.tolerance_price -= self.wipe_price
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
