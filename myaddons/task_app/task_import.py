@@ -62,7 +62,6 @@ class task_import(osv.osv_memory):
 
     def _get_picking_location(self, cr, uid, name, context=None):
         company = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id
-        stock_location_obj = self.pool.get('stock.location')
         warehouse_obj = self.pool.get('stock.warehouse')
 
         name = name.encode('utf8')
@@ -82,25 +81,6 @@ class task_import(osv.osv_memory):
             'location_id': wh.lot_stock_id.id
         }
 
-        # location_ids = stock_location_obj.search(cr, uid,
-        #                                          [('company_id', '=', company.id),
-        #                                           ('complete_name', 'ilike', name + ' / 库存')],
-        #                                          context=context)
-        # # _logger.info('location_ids: %s', location_ids)
-        # if len(location_ids) == 0:
-        #     raise osv.except_osv(_('Not Found!'), _('没有找到对应的仓库:' + name))
-        #
-        # type_obj = self.pool.get('stock.picking.type')
-        # type_ids = type_obj.search(cr, uid,
-        #                            [('code', '=', 'incoming'), ('default_location_dest_id', '=', location_ids[0])],
-        #                            context=context)
-        # # _logger.info('type_ids: %s', type_ids)
-        # if len(type_ids) == 0:
-        #     raise osv.except_osv(_('Not Found!'), _('没有找到对应的仓库:' + name))
-        #
-        # return {'picking_type_id': type_ids[0],
-        #         'location_id': location_ids[0]}
-
     def _get_or_create_product(self, cr, uid, item, context=None):
         product_obj = self.pool.get('product.template')
 
@@ -112,6 +92,12 @@ class task_import(osv.osv_memory):
         if 'type' not in item:
             item['type'] = 'consu'
 
+        if 'sale_ok' not in item:
+            item['sale_ok'] = 0
+
+        if 'purchase_ok' not in item:
+            item['purchase_ok'] = 0
+
         vals = {
             'name': item['name'],
             'type': item['type'],
@@ -121,6 +107,8 @@ class task_import(osv.osv_memory):
         }
         product_ids = [product_obj.create(cr, uid, vals, context=context)]
         _logger.info('%s product created: product_id: %s', item['name'], product_ids)
+
+        # product = product_obj.browse(cr, uid, product_ids, context=context)
 
         return product_ids
 
@@ -147,6 +135,10 @@ class task_import(osv.osv_memory):
                     partner.write({'mobile': item['mobile'], 'comment': comment})
 
             return partner_ids
+
+        # create a partner.
+        if 'supplier' not in item:
+            item['supplier'] = True
 
         # create a partner.
         if 'customer' not in item:
@@ -266,123 +258,10 @@ class task_import(osv.osv_memory):
 
         items = self._retrieve_items(cr, uid, ids, context=context)
 
-        # this = self.browse(cr, uid, ids[0])
-        # if this.combine_names:
-        #     for i in items:
-        #
-
         _logger.info('items: %s', items)
-
-        # # suppliers = [index for index, field in enumerate(fields) if field]
-        # suppliers = [(d[4]) for d in data]
-        #
-        # for s in suppliers:
-        #     _logger.info('supplier: %s', s)
-        #
-        # _logger.info('suppliers %d rows...', len(suppliers))
-        #
-        # suppliers = list(set(suppliers))
-        # _logger.info('suppliers %d rows...', len(suppliers))
-        #
-        # category = self._get_or_create_category(cr, uid, '运输车辆')
-        # _logger.info('category: %s', category)
-        #
-        # partner_obj = self.pool.get('res.partner')
-        # partner_ids = partner_obj.search(cr, uid, [('name', 'in', suppliers)], context=context)
-        # _logger.info('partner_ids: %s', partner_ids)
-        #
-        # imported_supplier = 0
-        # for d in data:
-        #     partner_ids = partner_obj.search(cr, uid, [('name', 'in', [d[3]])], context=context)
-        #     if len(partner_ids) != 0:
-        #         _logger.info('supplier %s is already created. partner_ids: %s', d[3], partner_ids)
-        #         continue
-        #
-        #     item = {
-        #         'customer': False,
-        #         'name': d[3],
-        #         'mobile': d[4],
-        #         'supplier': True,
-        #         'category_id': [(6, 0, [category])]
-        #     }
-        #     partner_id = [partner_obj.create(cr, uid, item, context=context)]
-        #     imported_supplier += 1
-        #     # partner_obj.write(cr, uid, partner_id[0], item, context=context)
-        #     _logger.info('%s supplier created: partner_id: %s', d[3], partner_id)
-        #
-        # _logger.info('%d suppliers import done.', imported_supplier)
-        #
-        # ########################################################################################
-        # category = self._get_or_create_category(cr, uid, '客户')
-        #
-        # imported_supplier = 0
-        # customers = set([x[9] for x in data])
-        # for d in customers:
-        #     partner_ids = partner_obj.search(cr, uid, [('name', 'in', [d])], context=context)
-        #     if len(partner_ids) != 0 or len(d) == 0:
-        #         _logger.info('customers %s is already created. partner_ids: %s', d, partner_ids)
-        #         continue
-        #
-        #     item = {
-        #         'customer': True,
-        #         'name': d,
-        #         'supplier': True,
-        #         'category_id': [(6, 0, [category])]
-        #     }
-        #     partner_id = [partner_obj.create(cr, uid, item, context=context)]
-        #     imported_supplier += 1
-        #     # partner_obj.write(cr, uid, partner_id[0], item, context=context)
-        #     _logger.info('%s supplier created: partner_id: %s', d, partner_id)
-        # ########################################################################################
-        #
-        # ########################################################################################
-        # category = self._get_or_create_category(cr, uid, '供应商')
-        #
-        # imported_supplier = 0
-        # customers = set([x[2] for x in data])
-        # for d in customers:
-        #     partner_ids = partner_obj.search(cr, uid, [('name', 'in', [d])], context=context)
-        #     if len(partner_ids) != 0 or len(d) == 0:
-        #         _logger.info('customers %s is already created. partner_ids: %s', d, partner_ids)
-        #         continue
-        #
-        #     item = {
-        #         'customer': True,
-        #         'name': d,
-        #         'supplier': True,
-        #         'category_id': [(6, 0, [category])]
-        #     }
-        #     partner_id = [partner_obj.create(cr, uid, item, context=context)]
-        #     imported_supplier += 1
-        #     # partner_obj.write(cr, uid, partner_id[0], item, context=context)
-        #     _logger.info('%s supplier created: partner_id: %s', d, partner_id)
-        # ########################################################################################
-        #
-        # product_obj = self.pool.get('product.product')
-        #
-        # imported_supplier = 0
-        # customers = set([x[1] for x in data])
-        # for d in customers:
-        #     product_ids = product_obj.search(cr, uid, [('name', 'in', [d])], context=context)
-        #     if len(product_ids) != 0:
-        #         _logger.info('product %s is already created. product_ids: %s', d, product_ids)
-        #         continue
-        #
-        #     item = {
-        #         'name': d,
-        #     }
-        #     product_id = [product_obj.create(cr, uid, item, context=context)]
-        #     imported_supplier += 1
-        #     # partner_obj.write(cr, uid, partner_id[0], item, context=context)
-        #     _logger.info('%s product created: product_id: %s', d, product_id)
-        #####################################################################################################
-        # Create purchase orders.
 
         for item in items:
             self.create_po(cr, uid, item, context=context)
-
-        #####################################################################################################
-        #####################################################################################################
 
         return True
 
@@ -406,26 +285,11 @@ class task_import(osv.osv_memory):
         pl = self._get_picking_location(cr, uid, item['库房'], context=context)
 
         # 货物单
-        # location_ids = location_obj.search(cr, uid, [('name', 'in', [item['库房']])], context=context)
-        # if len(location_ids) == 0:
-        #     _logger.info('supplier %s is not found. partner_ids: %s', item['库房'], location_ids)
-        #     return False
-
         partner_ids = self._get_or_create_partner(cr, uid, {'name': item['供应商'],
                                                             'category': '供应商',
                                                             'customer': True}, context=context)
 
-        # partner_ids = partner_obj.search(cr, uid, [('name', 'in', [item['供应商']])], context=context)
-        # if len(partner_ids) == 0:
-        #     _logger.info('supplier %s is not found. partner_ids: %s', item['供应商'], partner_ids)
-        #     return False
-
-        # product_ids = product_obj.search(cr, uid, [('name', 'in', [item['煤品种']])], context=context)
-        # if len(product_ids) == 0:
-        #     _logger.info('product %s is not found. product_ids: %s', item['煤品种'], product_ids)
-        #     return False
-
-        product_ids = self._get_or_create_product(cr, uid, {'name': item['煤品种']}, context=context)
+        product_ids = self._get_or_create_product(cr, uid, {'name': item['煤品种'], 'purchase_ok': 1}, context=context)
 
         po_item_name = vals['name']
         vals['name'] = '/'
@@ -457,24 +321,13 @@ class task_import(osv.osv_memory):
         pl = self._get_picking_location(cr, uid, item['库房'], context=context)
 
         # 运单
-        # partner_ids = partner_obj.search(cr, uid, [('name', 'in', [item['车牌号']])], context=context)
-        # if len(partner_ids) == 0:
-        #     _logger.info('supplier %s is not found. partner_ids: %s', item['车牌号'], partner_ids)
-        #     return False
 
         partner_ids = self._get_or_create_partner(cr, uid, {'name': item['车牌号'],
                                                             'mobile': int(item['电话']),
                                                             'categories': ['运输车辆', item['库房']],
                                                             'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, uid, {'name': '运输服务',
-                                                            'type': 'service'}, context=context)
-
-        # product_ids = product_obj.search(cr, uid, [('name', 'in', ['运输服务'])], context=context)
-        # if len(product_ids) == 0:
-        #     _logger.info('product %s is not found. product_ids: %s', '运输服务', product_ids)
-        #     raise osv.except_osv(_('Not Found!'), _('没有服务产品: 运输服务'))
-        #     # return False
+        product_ids = self._get_or_create_product(cr, uid, {'name': '运输服务', 'type': 'service'}, context=context)
 
         vals['name'] = '/'
         vals['date_order'] = time.strftime('%Y-%m-%d %H:%M:%S')

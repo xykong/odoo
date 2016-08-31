@@ -15,6 +15,7 @@
                             <field name="product_uom" class="oe_inline" readonly="1" groups="product.group_uom"/>
                         </div>
                         <field name="tolerance_price" readonly="1"/>
+                        <field name="wipe_price" readonly="1"/>
                         <field name="restrict_lot_id" domain="[('product_id','=',product_id)]"
                                groups="stock.group_production_lot"
                                context="{'default_product_id': product_id}"/>
