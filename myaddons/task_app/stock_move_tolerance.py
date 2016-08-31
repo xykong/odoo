@@ -2,6 +2,7 @@
 import openerp.addons.decimal_precision as dp
 import logging
 import time
+import math
 
 from openerp import fields, api
 from openerp.osv import fields, osv
@@ -23,7 +24,6 @@ class stock_move_tolerance(osv.osv_memory):
         'restrict_lot_id': fields.many2one('stock.production.lot', 'Lot'),
         'tolerance_price': fields.float('Price'),
         'wipe_price': fields.float('Wipe Price'),
-
     }
 
     _defaults = {
@@ -186,6 +186,13 @@ class stock_move_tolerance(osv.osv_memory):
             purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
             # calculate 抹零
+            tolerance.tolerance_price = math.floor(
+                (min(move.product_qty, tolerance.product_qty) * purchase_shipping.order_line[0].price_unit - abs(
+                    move.product_qty - tolerance.product_qty) * price_rise - loading_fee) * 100) / 100
+
+            tolerance.wipe_price = tolerance.tolerance_price - math.floor(tolerance.tolerance_price / 10) * 10
+            tolerance.tolerance_price -= tolerance.wipe_price
+
             if tolerance.wipe_price > 0:
                 product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '抹零', 'type': 'service'},
                                                                      context=context)
@@ -272,9 +279,8 @@ class stock_move_tolerance(osv.osv_memory):
         if not purchase_shipping:
             raise osv.except_osv(_('Error!'), _(u'没有找到此单对应的运输单据, 因此无法计算实际运费。'))
 
-        self.tolerance_price = min(move.product_qty, self.product_qty) * purchase_shipping.order_line[
-            0].price_unit - abs(
-            move.product_qty - self.product_qty) * price_rise - loading_fee
+        self.tolerance_price = math.floor((min(move.product_qty, self.product_qty) * purchase_shipping.order_line[
+            0].price_unit - abs(move.product_qty - self.product_qty) * price_rise - loading_fee) * 100) / 100
 
         self.wipe_price = self.tolerance_price - math.floor(self.tolerance_price / 10) * 10
         self.tolerance_price -= self.wipe_price
