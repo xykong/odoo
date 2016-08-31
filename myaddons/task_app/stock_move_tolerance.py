@@ -87,8 +87,6 @@ class stock_move_tolerance(osv.osv_memory):
         move = self.pool.get('stock.move').browse(cr, uid, move_ids, context=context)
 
         for data in self.browse(cr, uid, ids):
-            move_obj.action_scrap(cr, uid, move_ids, move.product_qty - data.product_qty, data.location_id.id,
-                                  restrict_lot_id=data.restrict_lot_id.id, context=context)
 
             purchase_obj = self.pool['purchase.order']
 
@@ -134,31 +132,59 @@ class stock_move_tolerance(osv.osv_memory):
                 po_line_id = po_line_obj.create(cr, uid, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
-            # calculate 涨吨差额
-            product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '涨吨差额', 'type': 'service'},
-                                                                 context=context)
+            # calculate 亏涨扣款
             product_obj = self.pool.get('product.template')
-            product = product_obj.browse(cr, uid, product_ids, context=context)
+            if move.product_qty > tolerance.product_qty:
+                # 亏吨处理,走报废流程.
+                move_obj.action_scrap(cr, uid, move_ids, move.product_qty - data.product_qty, data.location_id.id,
+                                      restrict_lot_id=data.restrict_lot_id.id, context=context)
 
-            price_rise_att = tolerance.product_id._get_attribute_value(u'涨吨价格')
-            if not price_rise_att[tolerance.product_id.id]:
-                raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'涨吨价格')))
-            price_rise = float(price_rise_att[tolerance.product_id.id])
+                product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '亏涨扣款', 'type': 'service'},
+                                                                         context=context)
+                product = product_obj.browse(cr, uid, product_ids, context=context)
 
-            vals = {
-                'name': product.name,
-                'product_id': product.id,
-                'product_qty': abs(move.product_qty - tolerance.product_qty),
-                'price_unit': - price_rise,
-                'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
-                'product_uom': 1,
-                'taxes_id': [[6, False, []]],
-                'account_analytic_id': False,
-                'order_id': purchase_shipping.id,
-            }
+                price_rise_att = tolerance.product_id._get_attribute_value(u'亏涨扣款')
+                if not price_rise_att[tolerance.product_id.id]:
+                    raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'亏涨扣款')))
+                price_rise = float(price_rise_att[tolerance.product_id.id])
 
-            po_line_id = po_line_obj.create(cr, uid, vals, context=context)
-            purchase_shipping.write({'order_line': [(4, po_line_id)]})
+                vals = {
+                    'name': product.name,
+                    'product_id': product.id,
+                    'product_qty': abs(move.product_qty - tolerance.product_qty),
+                    'price_unit': - price_rise,
+                    'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'product_uom': 1,
+                    'taxes_id': [[6, False, []]],
+                    'account_analytic_id': False,
+                    'order_id': purchase_shipping.id,
+                }
+
+                po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                purchase_shipping.write({'order_line': [(4, po_line_id)]})
+            else:
+                # 涨顿处理,走运输车辆增加产品流程.
+                # product = product_obj.browse(cr, uid, tolerance.product_id, context=context)
+
+                price_rise_att = tolerance.product_id._get_attribute_value(u'亏涨扣款')
+                if not price_rise_att[tolerance.product_id.id]:
+                    raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'亏涨扣款')))
+                price_rise = float(price_rise_att[tolerance.product_id.id])
+
+                vals = {
+                    'name': move.name,
+                    'product_id': tolerance.product_id.id,
+                    'product_qty': abs(move.product_qty - tolerance.product_qty),
+                    'price_unit': - price_rise,
+                    'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'product_uom': 1,
+                    'taxes_id': [[6, False, []]],
+                    'account_analytic_id': False,
+                    'order_id': purchase_shipping.id,
+                }
+
+                sub_po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                purchase_shipping.write({'order_line': [(4, sub_po_line_id)]})
 
             # calculate 装卸费
             product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '装卸费', 'type': 'service'},
@@ -203,7 +229,7 @@ class stock_move_tolerance(osv.osv_memory):
                     'name': product.name,
                     'product_id': product.id,
                     'product_qty': tolerance.wipe_price,
-                    'price_unit': -purchase_shipping.order_line[0].price_unit,
+                    'price_unit': -1,
                     'date_planned': time.strftime('%Y-%m-%d %H:%M:%S'),
                     'product_uom': 1,
                     'taxes_id': [[6, False, []]],
@@ -218,6 +244,11 @@ class stock_move_tolerance(osv.osv_memory):
             # purchase_obj.action_invoice_create(cr, uid, purchase_shipping.id, context=context)
 
             move_obj.action_done(cr, uid, move_ids, context=context)
+
+            # 如果有增加实物的处理.
+            if 'sub_po_line_id' in locals():
+                sub_po_line = po_line_obj.browse(cr, uid, sub_po_line_id, context=context)
+                move_obj.action_done(cr, uid, sub_po_line.move_ids.ids, context=context)
 
         # if move.picking_id:
         #     return {
@@ -251,9 +282,9 @@ class stock_move_tolerance(osv.osv_memory):
         if not move.picking_id:
             raise osv.except_osv(_('Error!'), _('产品数据错误，请刷新页面后重试。'))
 
-        price_rise_att = self.product_id._get_attribute_value(u'涨吨价格')
+        price_rise_att = self.product_id._get_attribute_value(u'亏涨扣款')
         if not price_rise_att[self.product_id.id]:
-            raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (self.product_id.name, u'涨吨价格')))
+            raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (self.product_id.name, u'亏涨扣款')))
         price_rise = float(price_rise_att[self.product_id.id])
 
         loading_fee_att = self.product_id._get_attribute_value(u'装卸费')

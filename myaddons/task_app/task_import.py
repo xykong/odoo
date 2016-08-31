@@ -104,6 +104,9 @@ class task_import(osv.osv_memory):
             'categ_id': 1,
             'uom_id': 1,
             'uom_po_id': 1,
+            'sale_ok': item['sale_ok'],
+            'purchase_ok': item['purchase_ok'],
+
         }
         product_ids = [product_obj.create(cr, uid, vals, context=context)]
         _logger.info('%s product created: product_id: %s', item['name'], product_ids)
@@ -347,7 +350,7 @@ class task_import(osv.osv_memory):
         # purchase_obj.picking_done(cr, uid, [po_id], context=context)
         # purchase_obj.action_invoice_create(cr, uid, [po_id], context=context)
 
-        purchase_obj.signal_workflow(cr, uid, [po_id], 'purchase_confirm')
+        # purchase_obj.signal_workflow(cr, uid, [po_id], 'purchase_confirm')
 
         _logger.info('Purchase order from item %s create: %s.', item, po_id)
 
