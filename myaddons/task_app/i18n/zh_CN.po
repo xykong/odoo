@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-08 06:10+0000\n"
-"PO-Revision-Date: 2016-08-08 06:10+0000\n"
+"POT-Creation-Date: 2016-09-02 10:23+0000\n"
+"PO-Revision-Date: 2016-09-02 10:23+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,6 +16,34 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: task_app
+#: code:addons/task_app/stock_move.py:87
+#, python-format
+msgid "%s %s %s has been <b>moved to</b> scrap."
+msgstr "%s %s %s has been <b>moved to</b> scrap."
+
+#. module: task_app
+#: model:ir.actions.act_window,help:task_app.action_task_move_form2
+msgid "<p class=\"oe_view_nocontent_create\">\n"
+"                    Click to create a stock movement.\n"
+"                </p>\n"
+"                <p>\n"
+"                    This menu gives you the full traceability of inventory\n"
+"                    operations on a specific product. You can filter on the product\n"
+"                    to see all the past or future movements for the product.\n"
+"                </p>\n"
+"            "
+msgstr "<p class=\"oe_view_nocontent_create\">\n"
+"                    Click to create a stock movement.\n"
+"                </p>\n"
+"                <p>\n"
+"                    This menu gives you the full traceability of inventory\n"
+"                    operations on a specific product. You can filter on the product\n"
+"                    to see all the past or future movements for the product.\n"
+"                </p>\n"
+"            "
+
+#. module: task_app
+#: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
 #: view:task.import:task_app.view_base_import_task
 msgid "Cancel"
 msgstr "取消"
@@ -26,28 +54,40 @@ msgid "Combine names"
 msgstr "自动组合产品名称"
 
 #. module: task_app
+#: field:stock.move.tolerance,create_uid:0
 #: field:task.import,create_uid:0
 msgid "Created by"
 msgstr "Created by"
 
 #. module: task_app
+#: field:stock.move.tolerance,create_date:0
 #: field:task.import,create_date:0
 msgid "Created on"
 msgstr "Created on"
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:685
-#: code:addons/task_app/task_import.py:692
+#: code:addons/task_app/task_import.py:547
+#: code:addons/task_app/task_import.py:554
 #, python-format
 msgid "Database ID"
 msgstr "Database ID"
 
 #. module: task_app
+#: field:stock.move.tolerance,display_name:0
 #: field:task.import,display_name:0
 msgid "Display Name"
 msgstr "Display Name"
 
 #. module: task_app
+#: code:addons/task_app/stock_move_tolerance.py:106
+#: code:addons/task_app/stock_move_tolerance.py:148
+#: code:addons/task_app/stock_move_tolerance.py:171
+#: code:addons/task_app/stock_move_tolerance.py:197
+#: code:addons/task_app/stock_move_tolerance.py:393
+#: code:addons/task_app/stock_move_tolerance.py:404
+#: code:addons/task_app/stock_move_tolerance.py:408
+#: code:addons/task_app/stock_move_tolerance.py:413
+#: code:addons/task_app/stock_move_tolerance.py:432
 #: code:addons/task_app/task_import.py:166
 #: code:addons/task_app/task_import.py:213
 #: code:addons/task_app/task_import.py:237
@@ -56,8 +96,8 @@ msgid "Error!"
 msgstr "Error!"
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:650
-#: code:addons/task_app/task_import.py:684
+#: code:addons/task_app/task_import.py:512
+#: code:addons/task_app/task_import.py:546
 #, python-format
 msgid "External ID"
 msgstr "External ID"
@@ -68,6 +108,7 @@ msgid "Filename"
 msgstr "Filename"
 
 #. module: task_app
+#: field:stock.move.tolerance,id:0
 #: field:task.import,id:0
 msgid "ID"
 msgstr "ID"
@@ -94,26 +135,70 @@ msgid "Import Type"
 msgstr "导入订单类型"
 
 #. module: task_app
+#: field:stock.move.tolerance,__last_update:0
 #: field:task.import,__last_update:0
 msgid "Last Modified on"
 msgstr "Last Modified on"
 
 #. module: task_app
+#: field:stock.move.tolerance,write_uid:0
 #: field:task.import,write_uid:0
 msgid "Last Updated by"
 msgstr "Last Updated by"
 
 #. module: task_app
+#: field:stock.move.tolerance,write_date:0
 #: field:task.import,write_date:0
 msgid "Last Updated on"
 msgstr "Last Updated on"
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:79
-#: code:addons/task_app/task_import.py:503
+#: field:stock.move.tolerance,location_id:0
+msgid "Location"
+msgstr "Location"
+
+#. module: task_app
+#: field:stock.move.tolerance,restrict_lot_id:0
+msgid "Lot"
+msgstr "Lot"
+
+#. module: task_app
+#: view:stock.move:task_app.view_form_todo_task_inherited_2
+msgid "Moves"
+msgstr "移动"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:75
+#: code:addons/task_app/task_import.py:365
 #, python-format
 msgid "Not Found!"
 msgstr "Not Found!"
+
+#. module: task_app
+#: field:stock.move,origin_product_uos:0
+msgid "Origin product uos"
+msgstr "Origin product uos"
+
+#. module: task_app
+#: help:stock.move,origin_product_uos:0
+msgid "Origin product uos from the po order."
+msgstr "Origin product uos from the po order."
+
+#. module: task_app
+#: field:stock.move.tolerance,tolerance_price:0
+msgid "Price"
+msgstr "应付价格"
+
+#. module: task_app
+#: model:ir.model,name:task_app.model_product_product
+#: field:stock.move.tolerance,product_id:0
+msgid "Product"
+msgstr "产品"
+
+#. module: task_app
+#: field:stock.move.tolerance,product_uom:0
+msgid "Product Unit of Measure"
+msgstr "Product Unit of Measure"
 
 #. module: task_app
 #: model:ir.ui.menu,name:task_app.menu_view_base_import_task_group
@@ -131,12 +216,59 @@ msgid "Purchase Orders"
 msgstr "Purchase Orders"
 
 #. module: task_app
+#: field:stock.move.tolerance,product_qty:0
+msgid "Quantity"
+msgstr "数量"
+
+#. module: task_app
+#: view:stock.move:task_app.view_form_todo_task_inherited_2
+msgid "Reference"
+msgstr "参考"
+
+#. module: task_app
+#: model:ir.model,name:task_app.model_stock_move
+msgid "Stock Move"
+msgstr "库存移动"
+
+#. module: task_app
 #: selection:task.import,import_type:0
 msgid "Suppliers"
 msgstr "Suppliers"
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:580
+#: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
+msgid "Tolerance"
+msgstr "收货"
+
+#. module: task_app
+#: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
+msgid "Tolerance Location"
+msgstr "报废位置"
+
+#. module: task_app
+#: model:ir.actions.act_window,name:task_app.move_tolerance
+msgid "Tolerance Move"
+msgstr "结算收货"
+
+#. module: task_app
+#: model:ir.model,name:task_app.model_stock_move_tolerance
+#: view:stock.move:task_app.view_form_todo_task_inherited
+#: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
+msgid "Tolerance Products"
+msgstr "Tolerance Products"
+
+#. module: task_app
+#: view:stock.move:task_app.view_form_todo_task_inherited_2
+msgid "Unit of Measure"
+msgstr "计量单位"
+
+#. module: task_app
+#: field:stock.move.tolerance,wipe_price:0
+msgid "Wipe Price"
+msgstr "抹零"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:442
 #, python-format
 msgid "You must configure at least one field to import"
 msgstr "You must configure at least one field to import"
@@ -152,9 +284,37 @@ msgid "_Import"
 msgstr "导入"
 
 #. module: task_app
+#: model:ir.actions.act_window,name:task_app.action_task_move_form2
+msgid "action Receive product"
+msgstr "action Receive product"
+
+#. module: task_app
+#: model:ir.ui.menu,name:task_app.menu_task_stock_move
+msgid "menuitem Receive product"
+msgstr "menuitem Receive product"
+
+#. module: task_app
+#: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
 #: view:task.import:task_app.view_base_import_task
 msgid "or"
 msgstr "or"
+
+#. module: task_app
+#: code:addons/task_app/stock_move_tolerance.py:148
+#: code:addons/task_app/stock_move_tolerance.py:171
+#: code:addons/task_app/stock_move_tolerance.py:197
+#: code:addons/task_app/stock_move_tolerance.py:408
+#: code:addons/task_app/stock_move_tolerance.py:413
+#, python-format
+msgid "产品 [%s] 没有定义属性: %s"
+msgstr "产品 [%s] 没有定义属性: %s"
+
+#. module: task_app
+#: code:addons/task_app/stock_move_tolerance.py:393
+#: code:addons/task_app/stock_move_tolerance.py:404
+#, python-format
+msgid "产品数据错误，请刷新页面后重试。"
+msgstr "产品数据错误，请刷新页面后重试。"
 
 #. module: task_app
 #: code:addons/task_app/task_import.py:237
@@ -175,13 +335,20 @@ msgid "导入文件缺少数据列: "
 msgstr "导入文件缺少数据列: "
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:79
+#: code:addons/task_app/task_import.py:75
 #, python-format
 msgid "没有找到对应的仓库:"
 msgstr "没有找到对应的仓库:"
 
 #. module: task_app
-#: code:addons/task_app/task_import.py:503
+#: code:addons/task_app/stock_move_tolerance.py:106
+#: code:addons/task_app/stock_move_tolerance.py:432
+#, python-format
+msgid "没有找到此单对应的运输单据, 因此无法计算实际运费。"
+msgstr "没有找到此单对应的运输单据, 因此无法计算实际运费。"
+
+#. module: task_app
+#: code:addons/task_app/task_import.py:365
 #, python-format
 msgid "订单导入失败，无法找到可用journal: journal_ids"
 msgstr "订单导入失败，无法找到可用journal: journal_ids"

@@ -48,6 +48,10 @@
             <field name="model">stock.move</field>
             <field name="priority" eval="18"/>
             <field name="inherit_id" ref="stock.view_move_tree"/>
+            <field name="domain" eval="[('state','!=','done')]"/>
+            <field name="context">{'group_by':'location_id'}</field>
+            <field name="context">{'search_default_group_by_product': True, 'search_default_group_by_location': True}
+            </field>
             <field name="arch" type="xml">
                 <!--<tree colors="grey:state == 'cancel';red:(state not in ('cancel','done')) and date > current_date"-->
                 <!--string="Moves">-->
@@ -122,23 +126,37 @@
             </field>
         </record>
 
+        <!--<record id="action_task_move_form2" model="ir.actions.act_window">-->
+            <!--<field name="name">action Receive product</field>-->
+            <!--<field name="res_model">stock.move</field>-->
+            <!--<field name="type">ir.actions.act_window</field>-->
+            <!--<field name="view_type">form</field>-->
+            <!--<field name="view_id" ref="view_form_todo_task_inherited_2"/>-->
+            <!--<field name="context">{}</field>-->
+            <!--<field name="help" type="html">-->
+                <!--<p class="oe_view_nocontent_create">-->
+                    <!--Click to create a stock movement.-->
+                <!--</p>-->
+                <!--<p>-->
+                    <!--This menu gives you the full traceability of inventory-->
+                    <!--operations on a specific product. You can filter on the product-->
+                    <!--to see all the past or future movements for the product.-->
+                <!--</p>-->
+            <!--</field>-->
+        <!--</record>-->
+
         <record id="action_task_move_form2" model="ir.actions.act_window">
-            <field name="name">action Receive product</field>
+            <field name="name">action Ready Transfers</field>
             <field name="res_model">stock.move</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
-            <field name="view_id" ref="view_form_todo_task_inherited_2"/>
-            <field name="context">{}</field>
-            <field name="help" type="html">
-                <p class="oe_view_nocontent_create">
-                    Click to create a stock movement.
-                </p>
-                <p>
-                    This menu gives you the full traceability of inventory
-                    operations on a specific product. You can filter on the product
-                    to see all the past or future movements for the product.
-                </p>
+            <field name="view_mode">tree,form,calendar</field>
+            <field name="domain"></field>
+            <field name="context">{
+                    'search_default_group_by_destination': 1,
+            }
             </field>
+            <!--<field name="search_view_id" ref="view_picking_internal_search"/>-->
         </record>
 
         <menuitem id="menu_task_stock_move"
