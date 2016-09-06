@@ -43,20 +43,20 @@
             <field name="context">{'form_view_ref': False}</field>
         </record>
 
-        <record id="task_view_move_form" model="ir.ui.view">
-            <field name="name">stock.move.form - Extension</field>
-            <field name="model">stock.move</field>
-            <field name="priority" eval="18"/>
-            <field name="inherit_id" ref="stock.view_move_form"/>
-            <field name="arch" type="xml">
+        <!--<record id="task_view_move_form" model="ir.ui.view">-->
+            <!--<field name="name">stock.move.form - Extension</field>-->
+            <!--<field name="model">stock.move</field>-->
+            <!--<field name="priority" eval="18"/>-->
+            <!--<field name="inherit_id" ref="stock.view_move_form"/>-->
+            <!--<field name="arch" type="xml">-->
+                <!--&lt;!&ndash;<button name="action_done" position="replace"/>&ndash;&gt;-->
+                <!--&lt;!&ndash;<button name="action_confirm" position="replace"/>&ndash;&gt;-->
                 <!--<button name="action_done" position="replace"/>-->
-                <!--<button name="action_confirm" position="replace"/>-->
-                <button name="action_done" position="replace"/>
-                <!--<button name="force_assign" position="replace"/>-->
-                <button name="action_cancel" position="replace"/>
-                <button name="%(stock.move_scrap)d" position="replace"/>
-            </field>
-        </record>
+                <!--&lt;!&ndash;<button name="force_assign" position="replace"/>&ndash;&gt;-->
+                <!--<button name="action_cancel" position="replace"/>-->
+                <!--<button name="%(stock.move_scrap)d" position="replace"/>-->
+            <!--</field>-->
+        <!--</record>-->
 
         <record id="view_form_todo_task_inherited" model="ir.ui.view">
             <field name="name">stock.move.tree - Extension</field>
