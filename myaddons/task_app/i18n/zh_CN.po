@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-09-02 10:23+0000\n"
-"PO-Revision-Date: 2016-09-02 10:23+0000\n"
+"POT-Creation-Date: 2016-09-06 12:00+0000\n"
+"PO-Revision-Date: 2016-09-06 12:00+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -22,25 +22,16 @@ msgid "%s %s %s has been <b>moved to</b> scrap."
 msgstr "%s %s %s has been <b>moved to</b> scrap."
 
 #. module: task_app
-#: model:ir.actions.act_window,help:task_app.action_task_move_form2
+#: model:ir.actions.act_window,help:task_app.action_move_form2
 msgid "<p class=\"oe_view_nocontent_create\">\n"
-"                    Click to create a stock movement.\n"
-"                </p>\n"
-"                <p>\n"
-"                    This menu gives you the full traceability of inventory\n"
-"                    operations on a specific product. You can filter on the product\n"
-"                    to see all the past or future movements for the product.\n"
-"                </p>\n"
+"                Click to create a stock movement.\n"
+"              </p><p>\n"
+"                This menu gives you the full traceability of inventory\n"
+"                operations on a specific product. You can filter on the product\n"
+"                to see all the past or future movements for the product.\n"
+"              </p>\n"
 "            "
-msgstr "<p class=\"oe_view_nocontent_create\">\n"
-"                    Click to create a stock movement.\n"
-"                </p>\n"
-"                <p>\n"
-"                    This menu gives you the full traceability of inventory\n"
-"                    operations on a specific product. You can filter on the product\n"
-"                    to see all the past or future movements for the product.\n"
-"                </p>\n"
-"            "
+msgstr "            "
 
 #. module: task_app
 #: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
@@ -66,6 +57,11 @@ msgid "Created on"
 msgstr "Created on"
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Creation"
+msgstr "创建日期"
+
+#. module: task_app
 #: code:addons/task_app/task_import.py:547
 #: code:addons/task_app/task_import.py:554
 #, python-format
@@ -73,10 +69,20 @@ msgid "Database ID"
 msgstr "Database ID"
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Destination"
+msgstr "目的位置"
+
+#. module: task_app
 #: field:stock.move.tolerance,display_name:0
 #: field:task.import,display_name:0
 msgid "Display Name"
 msgstr "Display Name"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Done"
+msgstr "完成"
 
 #. module: task_app
 #: code:addons/task_app/stock_move_tolerance.py:106
@@ -106,6 +112,11 @@ msgstr "External ID"
 #: field:task.import,filename:0
 msgid "Filename"
 msgstr "Filename"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Group By"
+msgstr "分组于"
 
 #. module: task_app
 #: field:stock.move.tolerance,id:0
@@ -153,9 +164,10 @@ msgid "Last Updated on"
 msgstr "Last Updated on"
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
 #: field:stock.move.tolerance,location_id:0
 msgid "Location"
-msgstr "Location"
+msgstr "位置"
 
 #. module: task_app
 #: field:stock.move.tolerance,restrict_lot_id:0
@@ -175,6 +187,11 @@ msgid "Not Found!"
 msgstr "Not Found!"
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Orders processed Today or planned for Today"
+msgstr "今天处理或计划今天处理的订单"
+
+#. module: task_app
 #: field:stock.move,origin_product_uos:0
 msgid "Origin product uos"
 msgstr "Origin product uos"
@@ -185,12 +202,23 @@ msgid "Origin product uos from the po order."
 msgstr "Origin product uos from the po order."
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Partner"
+msgstr "业务伙伴"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Picking"
+msgstr "分拣"
+
+#. module: task_app
 #: field:stock.move.tolerance,tolerance_price:0
 msgid "Price"
 msgstr "应付价格"
 
 #. module: task_app
 #: model:ir.model,name:task_app.model_product_product
+#: view:stock.move:task_app.view_move_search
 #: field:stock.move.tolerance,product_id:0
 msgid "Product"
 msgstr "产品"
@@ -221,9 +249,30 @@ msgid "Quantity"
 msgstr "数量"
 
 #. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Ready"
+msgstr "准备好"
+
+#. module: task_app
 #: view:stock.move:task_app.view_form_todo_task_inherited_2
+#: view:stock.move:task_app.view_move_search
 msgid "Reference"
 msgstr "参考"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Scheduled"
+msgstr "安排"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Source"
+msgstr "来源"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Status"
+msgstr "状态"
 
 #. module: task_app
 #: model:ir.model,name:task_app.model_stock_move
@@ -231,9 +280,40 @@ msgid "Stock Move"
 msgstr "库存移动"
 
 #. module: task_app
+#: model:ir.actions.act_window,name:task_app.action_move_form2
+#: view:stock.move:task_app.view_move_search
+msgid "Stock Moves"
+msgstr "库存移动"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Stock moves that are Available (Ready to process)"
+msgstr "库存移动可用（已准备好）"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Stock moves that are Confirmed, Available or Waiting"
+msgstr "库存移动处于已确认、可用或者在等待的状态"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Stock moves that have been processed"
+msgstr "库存移动已经被处理"
+
+#. module: task_app
 #: selection:task.import,import_type:0
 msgid "Suppliers"
 msgstr "Suppliers"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "To Do"
+msgstr "待办"
+
+#. module: task_app
+#: view:stock.move:task_app.view_move_search
+msgid "Today"
+msgstr "今天"
 
 #. module: task_app
 #: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard
@@ -284,14 +364,9 @@ msgid "_Import"
 msgstr "导入"
 
 #. module: task_app
-#: model:ir.actions.act_window,name:task_app.action_task_move_form2
-msgid "action Receive product"
-msgstr "action Receive product"
-
-#. module: task_app
 #: model:ir.ui.menu,name:task_app.menu_task_stock_move
 msgid "menuitem Receive product"
-msgstr "menuitem Receive product"
+msgstr "收货处理"
 
 #. module: task_app
 #: view:stock.move.tolerance:task_app.view_stock_move_tolerance_wizard

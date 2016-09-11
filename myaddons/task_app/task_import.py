@@ -98,16 +98,21 @@ class task_import(osv.osv_memory):
         if 'purchase_ok' not in item:
             item['purchase_ok'] = 0
 
+        if 'uom_id' not in item:
+            item['uom_id'] = 1
+        if 'uom_po_id' not in item:
+            item['uom_po_id'] = 1
+
         vals = {
             'name': item['name'],
             'type': item['type'],
             'categ_id': 1,
-            'uom_id': 1,
-            'uom_po_id': 1,
             'sale_ok': item['sale_ok'],
             'purchase_ok': item['purchase_ok'],
-
+            'uom_id': item['uom_id'],
+            'uom_po_id': item['uom_po_id'],
         }
+
         product_ids = [product_obj.create(cr, uid, vals, context=context)]
         _logger.info('%s product created: product_id: %s', item['name'], product_ids)
 
@@ -292,7 +297,10 @@ class task_import(osv.osv_memory):
                                                             'category': '供应商',
                                                             'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, uid, {'name': item['煤品种'], 'purchase_ok': 1}, context=context)
+        product_ids = self._get_or_create_product(cr, uid, {'name': item['煤品种'],
+                                                            'purchase_ok': 1,
+                                                            'uom_id': 7,
+                                                            'uom_po_id': 7}, context=context)
 
         po_item_name = vals['name']
         vals['name'] = '/'
@@ -300,6 +308,7 @@ class task_import(osv.osv_memory):
         vals['picking_type_id'] = pl['picking_type_id']
         vals['location_id'] = pl['location_id']
         vals['partner_id'] = partner_ids[0]
+        vals['order_line'][0][2]['product_uom'] = 7
         vals['order_line'][0][2]['product_id'] = product_ids[0]
         vals['order_line'][0][2]['date_planned'] = time.strftime('%Y-%m-%d')
         vals['order_line'][0][2]['price_unit'] = item['单价']
@@ -337,6 +346,7 @@ class task_import(osv.osv_memory):
         vals['picking_type_id'] = pl['picking_type_id']
         vals['location_id'] = pl['location_id']
         vals['partner_id'] = partner_ids[0]
+        vals['order_line'][0][2]['product_uom'] = 1
         vals['order_line'][0][2]['product_id'] = product_ids[0]
         vals['order_line'][0][2]['date_planned'] = item['日期']
         vals['order_line'][0][2]['price_unit'] = item['运费单价']
@@ -373,7 +383,7 @@ class task_import(osv.osv_memory):
             'location_id': 25,
             'notes': False,
             'order_line': [[0, False, {'product_id': 5,
-                                       'product_uom': 1,
+                                       'product_uom': 7,
                                        'date_planned': '2016-07-06',
                                        'price_unit': 260,
                                        'taxes_id': [[6, False, []]],
