@@ -27,6 +27,7 @@ class stock_warehouse(osv.osv):
         wh = warehouse_obj.browse(cr, uid, wh_ids[0], context=context)
 
         return {
+            'warehouse_id': wh.id,
             'picking_type_id': wh.in_type_id.id,
             'location_id': wh.lot_stock_id.id
         }

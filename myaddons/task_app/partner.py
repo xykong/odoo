@@ -58,14 +58,11 @@ class res_partner(osv.osv):
 
         # create a partner.
         if 'supplier' not in item:
-            item['supplier'] = True
+            item['supplier'] = False
 
         # create a partner.
         if 'customer' not in item:
             item['customer'] = False
-
-        item['supplier'] = True
-        item['customer'] = False
 
         if 'mobile' in item:
             item['comment'] = "%s.mobile:%s" % (time.strftime('%Y-%m-%d'), item['mobile'])
