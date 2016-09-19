@@ -214,5 +214,19 @@
                   parent="stock.menu_traceability"
                   sequence="20"
                   action="action_move_form2"/>
+
+        <record id="action_view_base_import_shipping" model="ir.actions.act_window">
+            <field name="name">Import Shipping Orders</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">task.import.shipping</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem action="action_view_base_import_shipping"
+                  id="menu_view_base_import_shipping"
+                  parent="stock.menu_traceability"/>
+
     </data>
 </openerp>
