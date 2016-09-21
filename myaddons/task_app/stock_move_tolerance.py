@@ -7,6 +7,7 @@ import math
 from openerp import fields, api
 from openerp.osv import fields, osv
 from openerp.tools.translate import _
+from openerp import SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
 
@@ -100,12 +101,12 @@ class stock_move_tolerance(osv.osv_memory):
 
             purchase_shipping_ids = purchase_obj.search(cr, uid, [('name', 'in', [shipping_name])],
                                                         context=context)
-            purchase_shipping = purchase_obj.browse(cr, uid, purchase_shipping_ids, context=context)
+            purchase_shipping = purchase_obj.browse(cr, SUPERUSER_ID, purchase_shipping_ids, context=context)
 
             if not purchase_shipping:
                 raise osv.except_osv(_('Error!'), _(u'没有找到此单对应的运输单据, 因此无法计算实际运费。'))
 
-            purchase_obj.action_cancel_draft(cr, uid, [purchase_shipping.id], context=context)
+            purchase_obj.action_cancel_draft(cr, SUPERUSER_ID, [purchase_shipping.id], context=context)
 
             task_import_obj = self.pool['task.import']
             po_line_obj = self.pool.get('purchase.order.line')
@@ -113,7 +114,7 @@ class stock_move_tolerance(osv.osv_memory):
 
             # calculate 实运差额
             if move.product_qty > tolerance.product_qty:
-                product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '实运差额', 'type': 'service'},
+                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '实运差额', 'type': 'service'},
                                                                      context=context)
                 product_obj = self.pool.get('product.template')
                 product = product_obj.browse(cr, uid, product_ids, context=context)
@@ -129,7 +130,7 @@ class stock_move_tolerance(osv.osv_memory):
                     'account_analytic_id': False,
                     'order_id': purchase_shipping.id,
                 }
-                po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                po_line_id = po_line_obj.create(cr, SUPERUSER_ID, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
             # calculate 亏涨扣款
@@ -139,7 +140,7 @@ class stock_move_tolerance(osv.osv_memory):
                 move_obj.action_scrap(cr, uid, move_ids, move.product_qty - data.product_qty, data.location_id.id,
                                       restrict_lot_id=data.restrict_lot_id.id, context=context)
 
-                product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '亏涨扣款', 'type': 'service'},
+                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '亏涨扣款', 'type': 'service'},
                                                                      context=context)
                 product = product_obj.browse(cr, uid, product_ids, context=context)
 
@@ -160,7 +161,7 @@ class stock_move_tolerance(osv.osv_memory):
                     'order_id': purchase_shipping.id,
                 }
 
-                po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                po_line_id = po_line_obj.create(cr, SUPERUSER_ID, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, po_line_id)]})
             else:
                 # 涨顿处理,走运输车辆增加产品流程.
@@ -183,11 +184,11 @@ class stock_move_tolerance(osv.osv_memory):
                     'order_id': purchase_shipping.id,
                 }
 
-                sub_po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                sub_po_line_id = po_line_obj.create(cr, SUPERUSER_ID, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, sub_po_line_id)]})
 
             # calculate 装卸费
-            product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '装卸费', 'type': 'service'},
+            product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '装卸费', 'type': 'service'},
                                                                  context=context)
             product_obj = self.pool.get('product.template')
             product = product_obj.browse(cr, uid, product_ids, context=context)
@@ -208,7 +209,7 @@ class stock_move_tolerance(osv.osv_memory):
                 'account_analytic_id': False,
                 'order_id': purchase_shipping.id,
             }
-            po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+            po_line_id = po_line_obj.create(cr, SUPERUSER_ID, vals, context=context)
             purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
             # calculate 抹零
@@ -220,7 +221,7 @@ class stock_move_tolerance(osv.osv_memory):
             tolerance.tolerance_price -= tolerance.wipe_price
 
             if tolerance.wipe_price > 0:
-                product_ids = task_import_obj._get_or_create_product(cr, uid, {'name': '抹零', 'type': 'service'},
+                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '抹零', 'type': 'service'},
                                                                      context=context)
                 product_obj = self.pool.get('product.template')
                 product = product_obj.browse(cr, uid, product_ids, context=context)
@@ -236,11 +237,11 @@ class stock_move_tolerance(osv.osv_memory):
                     'account_analytic_id': False,
                     'order_id': purchase_shipping.id,
                 }
-                po_line_id = po_line_obj.create(cr, uid, vals, context=context)
+                po_line_id = po_line_obj.create(cr, SUPERUSER_ID, vals, context=context)
                 purchase_shipping.write({'order_line': [(4, po_line_id)]})
 
             # finish workflow.
-            purchase_obj.signal_workflow(cr, uid, [purchase_shipping.id], 'purchase_confirm')
+            purchase_obj.signal_workflow(cr, SUPERUSER_ID, [purchase_shipping.id], 'purchase_confirm')
             # purchase_obj.action_invoice_create(cr, uid, purchase_shipping.id, context=context)
 
             move_obj.action_done(cr, uid, move_ids, context=context)
@@ -251,7 +252,7 @@ class stock_move_tolerance(osv.osv_memory):
                 move_obj.action_done(cr, uid, sub_po_line.move_ids.ids, context=context)
 
             account_invoice_obj = self.pool.get('account.invoice')
-            account_invoice_obj.signal_workflow(cr, uid, purchase_shipping.invoice_ids.ids, 'invoice_open')
+            account_invoice_obj.signal_workflow(cr, SUPERUSER_ID, purchase_shipping.invoice_ids.ids, 'invoice_open')
 
             # invoice = purchase_shipping.invoice_ids[0]
             # account_invoice_obj.action_date_assign(cr, uid, purchase_shipping.invoice_ids.ids, context=context)
@@ -284,92 +285,92 @@ class stock_move_tolerance(osv.osv_memory):
             # })
             # voucher = self.pool.get("account.voucher").browse(cr, uid, voucher, context=context)
             # voucher.signal_workflow("proforma_voucher")
-
-            invoice = purchase_shipping.invoice_ids[0]
-            # invoice = self.browse(cr, uid, ids[0], context=context)
-            move = invoice.move_id
-
-            # First part, create voucher
-            # account = transaction.journal_id.default_credit_account_id or transaction.journal_id.default_debit_account_id
-            period_id = self.pool.get('account.voucher')._get_period(cr, uid)
-            partner_id = self.pool.get('res.partner')._find_accounting_partner(invoice.partner_id).id,
-
-            voucher_data = {
-                'partner_id': partner_id,
-                'amount': abs(invoice.residual),
-                'journal_id': self.pool.get("account.journal").search(cr, uid, [("type", "=", "cash")], limit=1)[0],
-                'period_id': period_id,
-                'account_id': invoice.partner_id.property_account_receivable.id,
-                'type': invoice.type in ('out_invoice', 'out_refund') and 'receipt' or 'payment',
-                'reference': invoice.name,
-            }
-
-            _logger.debug('voucher_data')
-            _logger.debug(voucher_data)
-
-            voucher_id = self.pool.get('account.voucher').create(cr, uid, voucher_data, context=context)
-            _logger.debug('test')
-            _logger.debug(voucher_id)
-
-            # Equivalent to workflow proform
-            self.pool.get('account.voucher').write(cr, uid, [voucher_id], {'state': 'draft'}, context=context)
-
-            # Need to create basic account.voucher.line according to the type of invoice need to check stuff ...
-            # double_check = 0
-            # for move_line in invoice.move_id.line_id:
-            #     # According to invoice type
-            #     if invoice.type in ('out_invoice', 'out_refund'):
-            #         if move_line.debit > 0.0:
-            #             line_data = {
-            #                 'name': invoice.number,
-            #                 'voucher_id': voucher_id,
-            #                 'move_line_id': move_line.id,
-            #                 'account_id': invoice.account_id.id,
-            #                 'partner_id': partner_id,
-            #                 'amount_unreconciled': abs(move_line.debit),
-            #                 'amount_original': abs(move_line.debit),
-            #                 'amount': abs(move_line.debit),
-            #                 'type': 'cr',
-            #             }
-            #             _logger.debug('line_data')
-            #             _logger.debug(line_data)
             #
-            #             line_id = self.pool.get('account.voucher.line').create(cr, uid, line_data, context=context)
-            #             double_check += 1
-            #     else:
-            #         if move_line.credit > 0.0:
-            #             line_data = {
-            #                 'name': invoice.number,
-            #                 'voucher_id': voucher_id,
-            #                 'move_line_id': move_line.id,
-            #                 'account_id': invoice.account_id.id,
-            #                 'partner_id': partner_id,
-            #                 'amount_unreconciled': abs(move_line.credit),
-            #                 'amount_original': abs(move_line.credit),
-            #                 'amount': abs(move_line.credit),
-            #                 'type': 'dr',
-            #             }
-            #             _logger.debug('line_data')
-            #             _logger.debug(line_data)
+            # invoice = purchase_shipping.invoice_ids[0]
+            # # invoice = self.browse(cr, uid, ids[0], context=context)
+            # move = invoice.move_id
             #
-            #             line_id = self.pool.get('account.voucher.line').create(cr, uid, line_data, context=context)
-            #             double_check += 1
-
-            # # Cautious check to see if we did ok
-            # if double_check == 0:
-            #     _logger.warning(invoice)
-            #     _logger.warning(voucher_id)
-            #     raise osv.except_osv(_("Warning"), _("I did not create any voucher line"))
-            # elif double_check > 1:
-            #     _logger.warning(invoice)
-            #     _logger.warning(voucher_id)
-            #     raise osv.except_osv(_("Warning"), _("I created multiple voucher line ??"))
-
-            # Where the magic happen
-            voucher = self.pool.get("account.voucher").browse(cr, uid, voucher_id, context=context)
-            voucher.journal_id = self.pool.get("account.journal").search(cr, uid, [("type", "=", "cash")], limit=1)[0]
-
-            self.pool.get('account.voucher').button_proforma_voucher(cr, uid, [voucher_id], context=context)
+            # # First part, create voucher
+            # # account = transaction.journal_id.default_credit_account_id or transaction.journal_id.default_debit_account_id
+            # period_id = self.pool.get('account.voucher')._get_period(cr, uid)
+            # partner_id = self.pool.get('res.partner')._find_accounting_partner(invoice.partner_id).id,
+            #
+            # voucher_data = {
+            #     'partner_id': partner_id,
+            #     'amount': abs(invoice.residual),
+            #     'journal_id': self.pool.get("account.journal").search(cr, uid, [("type", "=", "cash")], limit=1)[0],
+            #     'period_id': period_id,
+            #     'account_id': invoice.partner_id.property_account_receivable.id,
+            #     'type': invoice.type in ('out_invoice', 'out_refund') and 'receipt' or 'payment',
+            #     'reference': invoice.name,
+            # }
+            #
+            # _logger.debug('voucher_data')
+            # _logger.debug(voucher_data)
+            #
+            # voucher_id = self.pool.get('account.voucher').create(cr, uid, voucher_data, context=context)
+            # _logger.debug('test')
+            # _logger.debug(voucher_id)
+            #
+            # # Equivalent to workflow proform
+            # self.pool.get('account.voucher').write(cr, uid, [voucher_id], {'state': 'draft'}, context=context)
+            #
+            # # Need to create basic account.voucher.line according to the type of invoice need to check stuff ...
+            # # double_check = 0
+            # # for move_line in invoice.move_id.line_id:
+            # #     # According to invoice type
+            # #     if invoice.type in ('out_invoice', 'out_refund'):
+            # #         if move_line.debit > 0.0:
+            # #             line_data = {
+            # #                 'name': invoice.number,
+            # #                 'voucher_id': voucher_id,
+            # #                 'move_line_id': move_line.id,
+            # #                 'account_id': invoice.account_id.id,
+            # #                 'partner_id': partner_id,
+            # #                 'amount_unreconciled': abs(move_line.debit),
+            # #                 'amount_original': abs(move_line.debit),
+            # #                 'amount': abs(move_line.debit),
+            # #                 'type': 'cr',
+            # #             }
+            # #             _logger.debug('line_data')
+            # #             _logger.debug(line_data)
+            # #
+            # #             line_id = self.pool.get('account.voucher.line').create(cr, uid, line_data, context=context)
+            # #             double_check += 1
+            # #     else:
+            # #         if move_line.credit > 0.0:
+            # #             line_data = {
+            # #                 'name': invoice.number,
+            # #                 'voucher_id': voucher_id,
+            # #                 'move_line_id': move_line.id,
+            # #                 'account_id': invoice.account_id.id,
+            # #                 'partner_id': partner_id,
+            # #                 'amount_unreconciled': abs(move_line.credit),
+            # #                 'amount_original': abs(move_line.credit),
+            # #                 'amount': abs(move_line.credit),
+            # #                 'type': 'dr',
+            # #             }
+            # #             _logger.debug('line_data')
+            # #             _logger.debug(line_data)
+            # #
+            # #             line_id = self.pool.get('account.voucher.line').create(cr, uid, line_data, context=context)
+            # #             double_check += 1
+            #
+            # # # Cautious check to see if we did ok
+            # # if double_check == 0:
+            # #     _logger.warning(invoice)
+            # #     _logger.warning(voucher_id)
+            # #     raise osv.except_osv(_("Warning"), _("I did not create any voucher line"))
+            # # elif double_check > 1:
+            # #     _logger.warning(invoice)
+            # #     _logger.warning(voucher_id)
+            # #     raise osv.except_osv(_("Warning"), _("I created multiple voucher line ??"))
+            #
+            # # Where the magic happen
+            # voucher = self.pool.get("account.voucher").browse(cr, uid, voucher_id, context=context)
+            # voucher.journal_id = self.pool.get("account.journal").search(cr, uid, [("type", "=", "cash")], limit=1)[0]
+            #
+            # self.pool.get('account.voucher').button_proforma_voucher(cr, uid, [voucher_id], context=context)
 
         # if move.picking_id:
         #     return {

@@ -35,6 +35,7 @@ except ImportError:
 
 from openerp.osv import orm
 from openerp.tools.translate import _
+from openerp import SUPERUSER_ID
 
 FIELDS_RECURSION_LIMIT = 2
 ERROR_PREVIEW_BYTES = 200
@@ -293,14 +294,15 @@ class task_import(osv.osv_memory):
         pl = self._get_picking_location(cr, uid, item['库房'], context=context)
 
         # 货物单
-        partner_ids = self._get_or_create_partner(cr, uid, {'name': item['供应商'],
-                                                            'category': '供应商',
-                                                            'customer': True}, context=context)
+        partner_ids = self._get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
+                                                                     'category': '供应商',
+                                                                     'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, uid, {'name': item['煤品种'],
-                                                            'purchase_ok': 1,
-                                                            'uom_id': 7,
-                                                            'uom_po_id': 7}, context=context)
+        product_ids = self._get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
+                                                                     'sale_ok': 1,
+                                                                     'purchase_ok': 1,
+                                                                     'uom_id': 7,
+                                                                     'uom_po_id': 7}, context=context)
 
         po_item_name = vals['name']
         vals['name'] = '/'
@@ -334,12 +336,13 @@ class task_import(osv.osv_memory):
 
         # 运单
 
-        partner_ids = self._get_or_create_partner(cr, uid, {'name': item['车牌号'],
-                                                            'mobile': int(item['电话']),
-                                                            'categories': ['运输车辆', item['库房']],
-                                                            'customer': True}, context=context)
+        partner_ids = self._get_or_create_partner(cr, SUPERUSER_ID, {'name': item['车牌号'],
+                                                                     'mobile': int(item['电话']),
+                                                                     'categories': ['运输车辆', item['库房']],
+                                                                     'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, uid, {'name': '运输服务', 'type': 'service'}, context=context)
+        product_ids = self._get_or_create_product(cr, SUPERUSER_ID, {'name': '运输服务', 'type': 'service'},
+                                                  context=context)
 
         vals['name'] = '/'
         vals['date_order'] = time.strftime('%Y-%m-%d %H:%M:%S')

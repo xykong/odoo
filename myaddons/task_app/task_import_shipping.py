@@ -25,6 +25,7 @@ import copy
 
 from openerp.osv import orm
 from openerp.tools.translate import _
+from openerp import SUPERUSER_ID
 
 FIELDS_RECURSION_LIMIT = 2
 ERROR_PREVIEW_BYTES = 200
@@ -57,20 +58,21 @@ class task_import_shipping(osv.osv_memory):
         # 运单
 
         partner_obj = self.pool.get('res.partner')
-        partner_ids = partner_obj.get_or_create_partner(cr, uid, {'name': item['海运'],
+        partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['海运'],
                                                                   # 'mobile': int(item['电话']),
                                                                   'categories': ['海运', item['目的港']],
                                                                   'supplier': True}, context=context)
 
         product_obj = self.pool.get('product.template')
-        product_ids = product_obj.get_or_create_product(cr, uid, {'name': '海运服务', 'type': 'service'}, context=context)
+        product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '海运服务', 'type': 'service'}, context=context)
 
-        # partner_ids = self._get_or_create_partner(cr, uid, {'name': item['供应商'],
+        # partner_ids = self._get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
         #                                                     'category': '供应商',
         #                                                     'customer': True}, context=context)
 
-        product_ids2 = product_obj.get_or_create_product(cr, uid, {'name': item['煤品种'],
+        product_ids2 = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
                                                                    'purchase_ok': 1,
+                                                                   'sale_ok': 1,
                                                                    'uom_id': 7,
                                                                    'uom_po_id': 7}, context=context)
 
@@ -95,23 +97,24 @@ class task_import_shipping(osv.osv_memory):
         vals['notes'] = u'箱号: %s\n铅封号: %s\n航次: %s\n%s' % (item['箱号'], item['铅封号'], item['航次'], item['备注'])
 
         purchase_obj = self.pool['purchase.order']
-        po_id = purchase_obj.create(cr, uid, vals, context=context)
+        po_id = purchase_obj.create(cr, SUPERUSER_ID, vals, context=context)
         # purchase_obj.wkf_confirm_order(cr, uid, [po_id], context=context)
         # purchase_obj.wkf_approve_order(cr, uid, [po_id], context=context)
         # purchase_obj.picking_done(cr, uid, [po_id], context=context)
         # purchase_obj.action_invoice_create(cr, uid, [po_id], context=context)
 
-        purchase_obj.signal_workflow(cr, uid, [po_id], 'purchase_confirm')
+        purchase_obj.signal_workflow(cr, SUPERUSER_ID, [po_id], 'purchase_confirm')
 
         purchase_obj = self.pool['purchase.order']
-        po = purchase_obj.browse(cr, uid, po_id, context=context)
+        po = purchase_obj.browse(cr, SUPERUSER_ID, po_id, context=context)
 
         # move_obj = self.pool.get('stock.move')
         # move_id = move_obj.search(cr, uid, [('origin', '=', picking.origin)])
         # move = move_obj.browse(cr, uid, move_id, context=context)
 
         pl_source = warehouse_obj.get_picking_location(cr, uid, item['场地'], context=context)
-        po.picking_ids.location_id = pl_source['location_id']
+        if po.picking_ids:
+            po.picking_ids.location_id = pl_source['location_id']
         _logger.info('Purchase order from item %s create: %s.', item, po_id)
 
     def create_po_trailer(self, cr, uid, vals, item, context=None):
@@ -126,13 +129,13 @@ class task_import_shipping(osv.osv_memory):
         # 运单
 
         partner_obj = self.pool.get('res.partner')
-        partner_ids = partner_obj.get_or_create_partner(cr, uid, {'name': item['拖运'],
+        partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['拖运'],
                                                                   # 'mobile': int(item['电话']),
                                                                   'categories': ['拖运', item['目的港']],
                                                                   'supplier': True}, context=context)
 
         product_obj = self.pool.get('product.template')
-        product_ids = product_obj.get_or_create_product(cr, uid, {'name': '拖运服务', 'type': 'service'}, context=context)
+        product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '拖运服务', 'type': 'service'}, context=context)
 
         vals['name'] = '/'
         vals['date_order'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -148,13 +151,13 @@ class task_import_shipping(osv.osv_memory):
         vals['notes'] = u'箱号: %s\n铅封号: %s\n航次: %s\n%s' % (item['箱号'], item['铅封号'], item['航次'], item['备注'])
 
         purchase_obj = self.pool['purchase.order']
-        po_id = purchase_obj.create(cr, uid, vals, context=context)
+        po_id = purchase_obj.create(cr, SUPERUSER_ID, vals, context=context)
         # purchase_obj.wkf_confirm_order(cr, uid, [po_id], context=context)
         # purchase_obj.wkf_approve_order(cr, uid, [po_id], context=context)
         # purchase_obj.picking_done(cr, uid, [po_id], context=context)
         # purchase_obj.action_invoice_create(cr, uid, [po_id], context=context)
 
-        purchase_obj.signal_workflow(cr, uid, [po_id], 'purchase_confirm')
+        purchase_obj.signal_workflow(cr, SUPERUSER_ID, [po_id], 'purchase_confirm')
 
         # purchase_obj = self.pool['purchase.order']
         # po = purchase_obj.browse(cr, uid, po_id, context=context)
@@ -167,7 +170,7 @@ class task_import_shipping(osv.osv_memory):
         # po.picking_ids.location_id = pl_source['location_id']
         _logger.info('Purchase order from item %s create: %s.', item, po_id)
 
-    def create_so(self, cr, uid, vals, item, context=None):
+    def create_so(self, cr, uid, item, context=None):
 
         vals = {'origin': False,
                 'incoterm': False,
@@ -206,13 +209,13 @@ class task_import_shipping(osv.osv_memory):
         pl = warehouse_obj.get_picking_location(cr, uid, item['目的港'], context=context)
 
         partner_obj = self.pool.get('res.partner')
-        partner_ids = partner_obj.get_or_create_partner(cr, uid, {'name': item['客户'],
+        partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['客户'],
                                                                   # 'mobile': int(item['电话']),
                                                                   'categories': ['客户', item['目的港']],
                                                                   'customer': True}, context=context)
 
         product_obj = self.pool.get('product.template')
-        product_ids = product_obj.get_or_create_product(cr, uid, {'name': item['煤品种'],
+        product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
                                                                   'purchase_ok': 1,
                                                                   'uom_id': 7,
                                                                   'uom_po_id': 7}, context=context)
@@ -231,9 +234,9 @@ class task_import_shipping(osv.osv_memory):
         vals['notes'] = u'箱号: %s\n铅封号: %s\n航次: %s\n%s' % (item['箱号'], item['铅封号'], item['航次'], item['备注'])
 
         sale_obj = self.pool['sale.order']
-        so_id = sale_obj.create(cr, uid, vals, context=context)
+        so_id = sale_obj.create(cr, SUPERUSER_ID, vals, context=context)
 
-        sale_obj.action_button_confirm(cr, uid, [so_id], context=None)
+        sale_obj.action_button_confirm(cr, SUPERUSER_ID, [so_id], context=None)
 
         _logger.info('Sale order from item %s create: %s.', item, so_id)
 
@@ -314,7 +317,7 @@ class task_import_shipping(osv.osv_memory):
             _logger.info('shipping item: %s', item)
             self.create_po_ocean_shipping(cr, uid, copy.deepcopy(vals), item, context=context)
             self.create_po_trailer(cr, uid, copy.deepcopy(vals), item, context=context)
-            self.create_so(cr, uid, copy.deepcopy(vals), item, context=context)
+            self.create_so(cr, uid, item, context=context)
             # return True
 
         return True
