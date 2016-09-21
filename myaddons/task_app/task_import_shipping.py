@@ -19,13 +19,12 @@
 #
 ##############################################################################
 
+import copy
 import logging
 import time
-import copy
 
-from openerp.osv import orm
-from openerp.tools.translate import _
 from openerp import SUPERUSER_ID
+from openerp.tools.translate import _
 
 FIELDS_RECURSION_LIMIT = 2
 ERROR_PREVIEW_BYTES = 200
@@ -267,9 +266,9 @@ class task_import_shipping(osv.osv_memory):
             '备注',
         ]
 
-        items = f._retrieve_items(this.binary_field, record, require_fields)
+        items = f.retrieve_items(this.binary_field, record, require_fields)
 
-        _logger.info('items: %s', items)
+        # _logger.info('items: %s', items)
 
         ###########################################################################################
         company = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id

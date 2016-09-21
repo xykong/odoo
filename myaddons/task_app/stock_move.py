@@ -1,8 +1,7 @@
-import openerp.addons.decimal_precision as dp
+# -*- coding: utf-8 -*-
 import logging
-import time
 
-from openerp import fields, api
+from openerp import fields
 from openerp.osv import fields, osv
 from openerp.tools.translate import _
 

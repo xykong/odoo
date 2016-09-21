@@ -19,21 +19,16 @@
 #
 ##############################################################################
 
-import base64
-import csv
-import itertools
 import logging
-import operator
 import time
 
-import xlrd
+import file_helper
 
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
-from openerp.osv import orm
 from openerp.tools.translate import _
 from openerp import SUPERUSER_ID
 
@@ -61,187 +56,6 @@ class task_import(osv.osv_memory):
                                              "and product type name."),
     }
 
-    def _get_picking_location(self, cr, uid, name, context=None):
-        company = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id
-        warehouse_obj = self.pool.get('stock.warehouse')
-
-        name = name.encode('utf8')
-
-        wh_ids = warehouse_obj.search(cr, uid,
-                                      [('company_id', '=', company.id),
-                                       ('name', '=', name)],
-                                      context=context)
-
-        if len(wh_ids) == 0:
-            raise osv.except_osv(_('Not Found!'), _('没有找到对应的仓库:' + name))
-
-        wh = warehouse_obj.browse(cr, uid, wh_ids[0], context=context)
-
-        return {
-            'picking_type_id': wh.in_type_id.id,
-            'location_id': wh.lot_stock_id.id
-        }
-
-    def _get_or_create_product(self, cr, uid, item, context=None):
-        product_obj = self.pool.get('product.template')
-
-        product_ids = product_obj.search(cr, uid, [('name', 'in', [item['name']])], context=context)
-        if len(product_ids) != 0:
-            # _logger.info('product %s is already created. product_ids: %s', item['name'], product_ids)
-            return product_ids
-
-        if 'type' not in item:
-            item['type'] = 'consu'
-
-        if 'sale_ok' not in item:
-            item['sale_ok'] = 0
-
-        if 'purchase_ok' not in item:
-            item['purchase_ok'] = 0
-
-        if 'uom_id' not in item:
-            item['uom_id'] = 1
-        if 'uom_po_id' not in item:
-            item['uom_po_id'] = 1
-
-        vals = {
-            'name': item['name'],
-            'type': item['type'],
-            'categ_id': 1,
-            'sale_ok': item['sale_ok'],
-            'purchase_ok': item['purchase_ok'],
-            'uom_id': item['uom_id'],
-            'uom_po_id': item['uom_po_id'],
-        }
-
-        product_ids = [product_obj.create(cr, uid, vals, context=context)]
-        _logger.info('%s product created: product_id: %s', item['name'], product_ids)
-
-        # product = product_obj.browse(cr, uid, product_ids, context=context)
-
-        return product_ids
-
-    def _get_or_create_partner(self, cr, uid, item, context=None):
-        partner_obj = self.pool.get('res.partner')
-
-        categories = []
-        if 'categories' in item:
-            categories = [self._get_or_create_category(cr, uid, c) for c in item['categories']]
-            item['category_id'] = [(6, 0, categories)]
-            del item['categories']
-
-        partner_ids = partner_obj.search(cr, uid, [('name', 'in', [item['name']])], context=context)
-        if len(partner_ids) != 0:
-            # _logger.info('supplier %s is already created. partner_ids: %s', item['name'], partner_ids)
-
-            for partner in partner_obj.browse(cr, uid, partner_ids, context=context):
-                if len(categories) != 0:
-                    _logger.info('supplier partner_ids: %s', partner.name)
-                    partner.write({'category_id': [(4, categories)]})
-
-                if ('mobile' in item) and item['mobile'] != partner.mobile:
-                    comment = "%s.mobile:%s\n%s" % (time.strftime('%Y-%m-%d'), item['mobile'], partner.comment)
-                    partner.write({'mobile': item['mobile'], 'comment': comment})
-
-            return partner_ids
-
-        # create a partner.
-        if 'supplier' not in item:
-            item['supplier'] = True
-
-        # create a partner.
-        if 'customer' not in item:
-            item['customer'] = False
-
-        item['supplier'] = True
-        item['customer'] = False
-
-        if 'mobile' in item:
-            item['comment'] = "%s.mobile:%s" % (time.strftime('%Y-%m-%d'), item['mobile'])
-
-        partner_ids = [partner_obj.create(cr, uid, item, context=context)]
-
-        _logger.info('%s supplier created: partner_id: %s', item['name'], partner_ids)
-
-        return partner_ids
-
-    def _check_import_file_columes(self, colnames):
-        try_fields = ['日期', '煤品种', '供应商', '车牌号', '电话', '运费单价', '净重', '单价', '库房', '客户名']
-        for f in try_fields:
-            if f not in colnames:
-                raise osv.except_osv(_('Error!'), _('导入文件缺少数据列: ' + f))
-
-    def _retrieve_items(self, cr, uid, ids, context=None):
-        this = self.browse(cr, uid, ids[0])
-        (record,) = self.browse(cr, uid, [id], context=context)
-
-        record.file = base64.decodestring(this.binary_field)
-        items = []
-
-        # read csv file.
-        import_fields = []
-        try:
-            options = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'gb2312'}
-            try_fields = ['日期', '煤品种', '供应商', '车牌号', '电话', '运费单价', '净重', '单价', '库房', '客户名']
-
-            data, import_fields = self._convert_import_data(record, try_fields, options, context=context)
-        except:
-            pass
-        if len(import_fields) != 0:
-            self._check_import_file_columes(import_fields)
-
-            _logger.info('importing %d rows...', len(data))
-
-            _logger.info('header: %s', import_fields)
-            for d in data:
-                items.append(dict(zip(import_fields, d)))
-                # _logger.info('import item: %s', d)
-
-            return items
-
-        # read xls file.
-        book = None
-        try:
-            record.file = base64.decodestring(this.binary_field)
-            book = xlrd.open_workbook(file_contents=record.file)
-
-        except:
-            pass
-
-        if book is not None:
-
-            _logger.info('book sheets: %s', len(book.sheets()))
-
-            table = book.sheet_by_index(0)
-            nrows = table.nrows  # 行数
-
-            if nrows < 2:
-                raise osv.except_osv(_('Error!'), _('导入文件没有采购数据。'))
-
-            items = []
-            colnames = [c.encode('utf8') for c in table.row_values(0)]  # 某一行数据
-
-            self._check_import_file_columes(colnames)
-
-            for rownum in range(1, nrows):
-                row = table.row_values(rownum)
-                if row:
-                    app = {}
-                for i in range(len(colnames)):
-                    if colnames[i] == '日期':
-                        app[colnames[i]] = xlrd.xldate.xldate_as_datetime(row[i], 0).strftime('%Y-%m-%d')
-                    else:
-                        app[colnames[i]] = row[i]
-
-                for i in range(len(colnames)):
-                    if colnames[i] == '煤品种' and this.combine_names:
-                        app[colnames[i]] = app['库房'] + '.' + row[i]
-
-                items.append(app)
-            return items
-
-        raise osv.except_osv(_('Error!'), _('导入文件格式不正确，数据导入失败。'))
-
     def do_test_case(self, cr, uid, ids, context=None):
         _logger.info('do_test_case!')
 
@@ -265,44 +79,46 @@ class task_import(osv.osv_memory):
         if context is None:
             context = {}
 
-        items = self._retrieve_items(cr, uid, ids, context=context)
+        f = file_helper.file_helper()
 
-        _logger.info('items: %s', items)
+        this = self.browse(cr, uid, ids[0])
+        (record,) = self.browse(cr, uid, [id], context=context)
+
+        require_fields = ['日期', '煤品种', '供应商', '车牌号', '电话', '运费单价', '净重', '单价', '库房', '客户名']
+
+        items = f.retrieve_items(this.binary_field, record, require_fields)
+
+        # _logger.info('items: %s', items)
+
+        if this.combine_names:
+            for item in items:
+                item['煤品种'] = item['库房'] + '.' + item['煤品种']
 
         for item in items:
             self.create_po(cr, uid, item, context=context)
 
         return True
 
-    def _get_or_create_category(self, cr, uid, name, context=None):
-        categories = self.pool.get('res.partner.category')
-
-        category = categories.search(cr, uid, [('name', 'in', [name])])
-        if len(category) == 0:
-            category = [categories.create(cr, uid, {'name': name}, context=context)]
-
-        return category[0]
-
     def _create_po_product(self, cr, uid, vals, item, context=None):
-        purchase_obj = self.pool['purchase.order']
-        # partner_obj = self.pool.get('res.partner')
-        # product_obj = self.pool.get('product.product')
 
         if len(item['库房']) == 0:
             return False
 
-        pl = self._get_picking_location(cr, uid, item['库房'], context=context)
+        warehouse_obj = self.pool.get('stock.warehouse')
+        pl = warehouse_obj.get_picking_location(cr, uid, item['库房'], context=context)
 
         # 货物单
-        partner_ids = self._get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
-                                                                     'category': '供应商',
-                                                                     'customer': True}, context=context)
+        partner_obj = self.pool.get('res.partner')
+        partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
+                                                                           'category': '供应商',
+                                                                           'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
-                                                                     'sale_ok': 1,
-                                                                     'purchase_ok': 1,
-                                                                     'uom_id': 7,
-                                                                     'uom_po_id': 7}, context=context)
+        product_obj = self.pool.get('product.template')
+        product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
+                                                                           'sale_ok': 1,
+                                                                           'purchase_ok': 1,
+                                                                           'uom_id': 7,
+                                                                           'uom_po_id': 7}, context=context)
 
         po_item_name = vals['name']
         vals['name'] = '/'
@@ -318,6 +134,7 @@ class task_import(osv.osv_memory):
         vals['order_line'][0][2]['name'] = item['车牌号']
         vals['notes'] = 'po_item_name:' + po_item_name
 
+        purchase_obj = self.pool['purchase.order']
         po_id = purchase_obj.create(cr, uid, vals, context=context)
 
         purchase_obj.signal_workflow(cr, uid, [po_id], 'purchase_confirm')
@@ -325,24 +142,24 @@ class task_import(osv.osv_memory):
         _logger.info('Purchase order from item %s create: %s.', item, po_id)
 
     def _create_po_shipping(self, cr, uid, vals, item, context=None):
-        purchase_obj = self.pool['purchase.order']
-        # partner_obj = self.pool.get('res.partner')
-        # product_obj = self.pool.get('product.product')
 
         if len(item['库房']) == 0:
             return False
 
-        pl = self._get_picking_location(cr, uid, item['库房'], context=context)
+        warehouse_obj = self.pool.get('stock.warehouse')
+        pl = warehouse_obj.get_picking_location(cr, uid, item['库房'], context=context)
 
         # 运单
 
-        partner_ids = self._get_or_create_partner(cr, SUPERUSER_ID, {'name': item['车牌号'],
-                                                                     'mobile': int(item['电话']),
-                                                                     'categories': ['运输车辆', item['库房']],
-                                                                     'customer': True}, context=context)
+        partner_obj = self.pool.get('res.partner')
+        partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['车牌号'],
+                                                                           'mobile': int(item['电话']),
+                                                                           'categories': ['运输车辆', item['库房']],
+                                                                           'customer': True}, context=context)
 
-        product_ids = self._get_or_create_product(cr, SUPERUSER_ID, {'name': '运输服务', 'type': 'service'},
-                                                  context=context)
+        product_obj = self.pool.get('product.template')
+        product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '运输服务', 'type': 'service'},
+                                                        context=context)
 
         vals['name'] = '/'
         vals['date_order'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -357,6 +174,7 @@ class task_import(osv.osv_memory):
         vals['order_line'][0][2]['name'] = '运输服务'
         vals['notes'] = False
 
+        purchase_obj = self.pool['purchase.order']
         po_id = purchase_obj.create(cr, uid, vals, context=context)
         # purchase_obj.wkf_confirm_order(cr, uid, [po_id], context=context)
         # purchase_obj.wkf_approve_order(cr, uid, [po_id], context=context)
@@ -414,228 +232,3 @@ class task_import(osv.osv_memory):
         # _logger.info('Purchase order from item %s create: %s.', item, po_id)
 
         return True
-
-    def _read_csv(self, record, options):
-        """ Returns a CSV-parsed iterator of all empty lines in the file
-
-        :throws csv.Error: if an error is detected during CSV parsing
-        :throws UnicodeDecodeError: if ``options.encoding`` is incorrect
-        """
-        csv_iterator = csv.reader(
-            StringIO(record.file),
-            quotechar=str(options['quoting']),
-            delimiter=str(options['separator']))
-
-        def nonempty(row):
-            return any(x for x in row if x.strip())
-
-        csv_nonempty = itertools.ifilter(nonempty, csv_iterator)
-        # TODO: guess encoding with chardet? Or https://github.com/aadsm/jschardet
-        encoding = options.get('encoding', 'utf-8')
-
-        return itertools.imap(
-            lambda row: [item.decode(encoding) for item in row],
-            csv_nonempty)
-
-    def _convert_import_data(self, record, fields, options, context=None):
-        """ Extracts the input browse_record and fields list (with
-        ``False``-y placeholders for fields to *not* import) into a
-        format Model.import_data can use: a fields list without holes
-        and the precisely matching data matrix
-
-        :param browse_record record:
-        :param list(str|bool): fields
-        :returns: (data, fields)
-        :rtype: (list(list(str)), list(str))
-        :raises ValueError: in case the import data could not be converted
-        """
-        # Get indices for non-empty fields
-        indices = [index for index, field in enumerate(fields) if field]
-        if not indices:
-            raise ValueError(_("You must configure at least one field to import"))
-        # If only one index, itemgetter will return an atom rather
-        # than a 1-tuple
-        if len(indices) == 1:
-            mapper = lambda row: [row[indices[0]]]
-        else:
-            mapper = operator.itemgetter(*indices)
-        # Get only list of actually imported fields
-        import_fields = filter(None, fields)
-
-        rows_to_import = self._read_csv(record, options)
-        if options.get('headers'):
-            rows_to_import = itertools.islice(rows_to_import, 1, None)
-        data = [
-            row for row in itertools.imap(mapper, rows_to_import)
-            # don't try inserting completely empty rows (e.g. from
-            # filtering out o2m fields)
-            if any(row)
-            ]
-
-        return data, import_fields
-
-    def get_fields(self, cr, uid, model, context=None, depth=FIELDS_RECURSION_LIMIT):
-        """ Recursively get fields for the provided model (through
-        fields_get) and filter them according to importability
-
-        The output format is a list of ``Field``, with ``Field``
-        defined as:
-
-        .. class:: Field
-
-            .. attribute:: id (str)
-
-                A non-unique identifier for the field, used to compute
-                the span of the ``required`` attribute: if multiple
-                ``required`` fields have the same id, only one of them
-                is necessary.
-
-            .. attribute:: name (str)
-
-                The field's logical (Odoo) name within the scope of
-                its parent.
-
-            .. attribute:: string (str)
-
-                The field's human-readable name (``@string``)
-
-            .. attribute:: required (bool)
-
-                Whether the field is marked as required in the
-                model. Clients must provide non-empty import values
-                for all required fields or the import will error out.
-
-            .. attribute:: fields (list(Field))
-
-                The current field's subfields. The database and
-                external identifiers for m2o and m2m fields; a
-                filtered and transformed fields_get for o2m fields (to
-                a variable depth defined by ``depth``).
-
-                Fields with no sub-fields will have an empty list of
-                sub-fields.
-
-        :param str model: name of the model to get fields form
-        :param int landing: depth of recursion into o2m fields
-        """
-        model_obj = self.pool[model]
-        fields = [{
-            'id': 'id',
-            'name': 'id',
-            'string': _("External ID"),
-            'required': False,
-            'fields': [],
-        }]
-        fields_got = model_obj.fields_get(cr, uid, context=context)
-        blacklist = orm.MAGIC_COLUMNS + [model_obj.CONCURRENCY_CHECK_FIELD]
-        for name, field in fields_got.iteritems():
-            if name in blacklist:
-                continue
-            # an empty string means the field is deprecated, @deprecated must
-            # be absent or False to mean not-deprecated
-            if field.get('deprecated', False) is not False:
-                continue
-            if field.get('readonly'):
-                states = field.get('states')
-                if not states:
-                    continue
-                # states = {state: [(attr, value), (attr2, value2)], state2:...}
-                if not any(attr == 'readonly' and value is False
-                           for attr, value in itertools.chain.from_iterable(
-                    states.itervalues())):
-                    continue
-
-            f = {
-                'id': name,
-                'name': name,
-                'string': field['string'],
-                # Y U NO ALWAYS HAS REQUIRED
-                'required': bool(field.get('required')),
-                'fields': [],
-            }
-
-            if field['type'] in ('many2many', 'many2one'):
-                f['fields'] = [
-                    dict(f, name='id', string=_("External ID")),
-                    dict(f, name='.id', string=_("Database ID")),
-                ]
-            elif field['type'] == 'one2many' and depth:
-                f['fields'] = self.get_fields(
-                    cr, uid, field['relation'], context=context, depth=depth - 1)
-                if self.pool['res.users'].has_group(cr, uid, 'base.group_no_one'):
-                    f['fields'].append(
-                        {'id': '.id', 'name': '.id', 'string': _("Database ID"), 'required': False, 'fields': []})
-
-            fields.append(f)
-
-        # TODO: cache on model?
-        return fields
-
-    def _match_headers(self, rows, fields, options):
-        """ Attempts to match the imported model's fields to the
-        titles of the parsed CSV file, if the file is supposed to have
-        headers.
-
-        Will consume the first line of the ``rows`` iterator.
-
-        Returns a pair of (None, None) if headers were not requested
-        or the list of headers and a dict mapping cell indices
-        to key paths in the ``fields`` tree
-
-        :param Iterator rows:
-        :param dict fields:
-        :param dict options:
-        :rtype: (None, None) | (list(str), dict(int: list(str)))
-        """
-        if not options.get('headers'):
-            return None, None
-
-        headers = next(rows)
-        return headers, dict(
-            (index, [field['name'] for field in self._match_header(header, fields, options)] or None)
-            for index, header in enumerate(headers)
-        )
-
-    def _match_header(self, header, fields, options):
-        """ Attempts to match a given header to a field of the
-        imported model.
-
-        :param str header: header name from the CSV file
-        :param fields:
-        :param dict options:
-        :returns: an empty list if the header couldn't be matched, or
-                  all the fields to traverse
-        :rtype: list(Field)
-        """
-        string_match = None
-        for field in fields:
-            # FIXME: should match all translations & original
-            # TODO: use string distance (levenshtein? hamming?)
-            if header.lower() == field['name'].lower():
-                return [field]
-            if header.lower() == field['string'].lower():
-                # matching string are not reliable way because
-                # strings have no unique constraint
-                string_match = field
-        if string_match:
-            # this behavior is only applied if there is no matching field['name']
-            return [string_match]
-
-        if '/' not in header:
-            return []
-
-        # relational field path
-        traversal = []
-        subfields = fields
-        # Iteratively dive into fields tree
-        for section in header.split('/'):
-            # Strip section in case spaces are added around '/' for
-            # readability of paths
-            match = self._match_header(section.strip(), subfields, options)
-            # Any match failure, exit
-            if not match: return []
-            # prep subfields for next iteration within match[0]
-            field = match[0]
-            subfields = field['fields']
-            traversal.append(field)
-        return traversal

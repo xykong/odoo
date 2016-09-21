@@ -114,9 +114,9 @@ class stock_move_tolerance(osv.osv_memory):
 
             # calculate 实运差额
             if move.product_qty > tolerance.product_qty:
-                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '实运差额', 'type': 'service'},
-                                                                     context=context)
                 product_obj = self.pool.get('product.template')
+                product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '实运差额', 'type': 'service'},
+                                                                context=context)
                 product = product_obj.browse(cr, uid, product_ids, context=context)
 
                 vals = {
@@ -140,11 +140,11 @@ class stock_move_tolerance(osv.osv_memory):
                 move_obj.action_scrap(cr, uid, move_ids, move.product_qty - data.product_qty, data.location_id.id,
                                       restrict_lot_id=data.restrict_lot_id.id, context=context)
 
-                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '亏涨扣款', 'type': 'service'},
-                                                                     context=context)
+                product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '亏涨扣款', 'type': 'service'},
+                                                                context=context)
                 product = product_obj.browse(cr, uid, product_ids, context=context)
 
-                price_rise_att = tolerance.product_id._get_attribute_value(u'亏涨扣款')
+                price_rise_att = tolerance.product_id.get_attribute_value(u'亏涨扣款')
                 if not price_rise_att[tolerance.product_id.id]:
                     raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'亏涨扣款')))
                 price_rise = float(price_rise_att[tolerance.product_id.id])
@@ -167,7 +167,7 @@ class stock_move_tolerance(osv.osv_memory):
                 # 涨顿处理,走运输车辆增加产品流程.
                 # product = product_obj.browse(cr, uid, tolerance.product_id, context=context)
 
-                price_rise_att = tolerance.product_id._get_attribute_value(u'亏涨扣款')
+                price_rise_att = tolerance.product_id.get_attribute_value(u'亏涨扣款')
                 if not price_rise_att[tolerance.product_id.id]:
                     raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'亏涨扣款')))
                 price_rise = float(price_rise_att[tolerance.product_id.id])
@@ -188,12 +188,12 @@ class stock_move_tolerance(osv.osv_memory):
                 purchase_shipping.write({'order_line': [(4, sub_po_line_id)]})
 
             # calculate 装卸费
-            product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '装卸费', 'type': 'service'},
-                                                                 context=context)
+            product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '装卸费', 'type': 'service'},
+                                                            context=context)
             product_obj = self.pool.get('product.template')
             product = product_obj.browse(cr, uid, product_ids, context=context)
 
-            loading_fee_att = tolerance.product_id._get_attribute_value(u'装卸费')
+            loading_fee_att = tolerance.product_id.get_attribute_value(u'装卸费')
             if not loading_fee_att[tolerance.product_id.id]:
                 raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (tolerance.product_id.name, u'装卸费')))
             loading_fee = float(loading_fee_att[tolerance.product_id.id])
@@ -221,8 +221,8 @@ class stock_move_tolerance(osv.osv_memory):
             tolerance.tolerance_price -= tolerance.wipe_price
 
             if tolerance.wipe_price > 0:
-                product_ids = task_import_obj._get_or_create_product(cr, SUPERUSER_ID, {'name': '抹零', 'type': 'service'},
-                                                                     context=context)
+                product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '抹零', 'type': 'service'},
+                                                                context=context)
                 product_obj = self.pool.get('product.template')
                 product = product_obj.browse(cr, uid, product_ids, context=context)
 
@@ -404,12 +404,12 @@ class stock_move_tolerance(osv.osv_memory):
         if not move.picking_id:
             raise osv.except_osv(_('Error!'), _('产品数据错误，请刷新页面后重试。'))
 
-        price_rise_att = self.product_id._get_attribute_value(u'亏涨扣款')
+        price_rise_att = self.product_id.get_attribute_value(u'亏涨扣款')
         if not price_rise_att[self.product_id.id]:
             raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (self.product_id.name, u'亏涨扣款')))
         price_rise = float(price_rise_att[self.product_id.id])
 
-        loading_fee_att = self.product_id._get_attribute_value(u'装卸费')
+        loading_fee_att = self.product_id.get_attribute_value(u'装卸费')
         if not loading_fee_att[self.product_id.id]:
             raise osv.except_osv(_('Error!'), _(u'产品 [%s] 没有定义属性: %s' % (self.product_id.name, u'装卸费')))
         loading_fee = float(loading_fee_att[self.product_id.id])

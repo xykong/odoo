@@ -19,10 +19,10 @@
 #
 ##############################################################################
 
-from openerp.osv import fields, osv
-from openerp.tools.translate import _
-
 import logging
+import time
+
+from openerp.osv import osv
 
 _logger = logging.getLogger(__name__)
 

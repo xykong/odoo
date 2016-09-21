@@ -4,6 +4,7 @@ import csv
 import itertools
 import logging
 import operator
+
 import xlrd
 
 try:
@@ -12,7 +13,7 @@ except ImportError:
     from StringIO import StringIO
 
 from openerp.tools.translate import _
-from openerp.osv import osv, fields
+from openerp.osv import osv
 
 _logger = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ class file_helper:
             if f not in colnames:
                 raise osv.except_osv(_('Error!'), _('导入文件缺少数据列: ' + f))
 
-    def _retrieve_items(self, binary_field, record, require_fields):
+    def retrieve_items(self, binary_field, record, require_fields):
         # this = self.browse(cr, uid, ids[0])
         # (record,) = self.browse(cr, uid, [id], context=context)
 
