@@ -111,7 +111,7 @@ class task_import(osv.osv_memory):
         partner_obj = self.pool.get('res.partner')
         partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
                                                                            'category': '供应商',
-                                                                           'customer': True}, context=context)
+                                                                           'supplier': True}, context=context)
 
         product_obj = self.pool.get('product.template')
         product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': item['煤品种'],
@@ -155,7 +155,7 @@ class task_import(osv.osv_memory):
         partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['车牌号'],
                                                                            'mobile': int(item['电话']),
                                                                            'categories': ['运输车辆', item['库房']],
-                                                                           'customer': True}, context=context)
+                                                                           'supplier': True}, context=context)
 
         product_obj = self.pool.get('product.template')
         product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '运输服务', 'type': 'service'},
