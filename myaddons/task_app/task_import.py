@@ -193,7 +193,7 @@ class task_import(osv.osv_memory):
                                                    ('company_id', '=', company.id)], limit=1)
 
         if len(journal_ids) == 0:
-            raise osv.except_osv(_('Not Found!'), _('订单导入失败，无法找到可用journal: journal_ids'))
+            raise osv.except_osv(_('Not Found!'), _('订单导入失败，无法找到可用journal, company_id: %d' % company))
 
         vals = {
             'origin': False,
