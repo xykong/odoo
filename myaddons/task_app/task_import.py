@@ -21,7 +21,6 @@
 
 import logging
 import time
-
 import file_helper
 
 try:
@@ -110,7 +109,7 @@ class task_import(osv.osv_memory):
         # 货物单
         partner_obj = self.pool.get('res.partner')
         partner_ids = partner_obj.get_or_create_partner(cr, SUPERUSER_ID, {'name': item['供应商'],
-                                                                           'category': '供应商',
+                                                                           'category': ['供应商', '煤炭'],
                                                                            'supplier': True}, context=context)
 
         product_obj = self.pool.get('product.template')
