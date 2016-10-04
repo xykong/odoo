@@ -1,0 +1,79 @@
+<openerp>
+    <data>
+
+        <menuitem id="menu_view_base_import_task_group" name="Purchase Import" parent="base.menu_purchase_root"
+                  sequence="2"/>
+
+
+        <!-- Import todo task section -->
+        <record id="view_base_import_task" model="ir.ui.view">
+            <field name="name">Import Todo Task</field>
+            <field name="model">task.import</field>
+            <field name="arch" type="xml">
+                <form string="Import Todo Task">
+                    <group>
+                        <!--<field name="import_type"/>-->
+                        <field name="filename" readonly="1" invisible="1"/>
+                        <field name="binary_field" filename="filename"/>
+                        <field name="combine_names"/>
+                    </group>
+                    <footer>
+                        <!--<button name="do_test_case" string="_Do_test_case" type="object" class="oe_highlight"/>-->
+                        <!--@@-->
+                        <button name="import_task" string="_Import" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_view_base_import_task" model="ir.actions.act_window">
+            <field name="name">Import Task</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">task.import</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem action="action_view_base_import_task"
+                  id="menu_view_base_import_task"
+                  parent="menu_view_base_import_task_group"/>
+
+
+        <!-- Import shipping orders section -->
+        <record id="record_model_task_import_shipping" model="ir.ui.view">
+            <field name="name">Import Shipping Orders</field>
+            <field name="model">task.import.shipping</field>
+            <field name="arch" type="xml">
+                <form string="Import Shipping Orders">
+                    <group>
+                        <!--<field name="import_type"/>-->
+                        <field name="filename" readonly="1" invisible="1"/>
+                        <field name="binary_field" filename="filename"/>
+                    </group>
+                    <footer>
+                        <button name="do_import_shipping" string="_Import" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_view_base_import_shipping" model="ir.actions.act_window">
+            <field name="name">Import Shipping Orders</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">task.import.shipping</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem action="action_view_base_import_shipping"
+                  id="menu_view_base_import_shipping"
+                  parent="menu_view_base_import_task_group"/>
+
+    </data>
+</openerp>

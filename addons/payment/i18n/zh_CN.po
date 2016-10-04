@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: Odoo 8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-01-21 14:08+0000\n"
-"PO-Revision-Date: 2016-06-17 12:22+0000\n"
+"PO-Revision-Date: 2016-07-07 14:36+0000\n"
 "Last-Translator: Jeffery Chenn <jeffery9@gmail.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/odoo/odoo-8/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -117,7 +117,7 @@ msgstr "创建日期"
 #. module: payment
 #: field:payment.transaction,currency_id:0
 msgid "Currency"
-msgstr "币别"
+msgstr "货币"
 
 #. module: payment
 #: help:payment.transaction,message_last_post:0
@@ -377,7 +377,7 @@ msgstr "生产单编码"
 #: view:payment.acquirer:payment.acquirer_search
 #: field:payment.acquirer,provider:0
 msgid "Provider"
-msgstr "提供者"
+msgstr "服务商"
 
 #. module: payment
 #: help:payment.transaction,acquirer_reference:0
