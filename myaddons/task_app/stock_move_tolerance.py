@@ -3,7 +3,6 @@ import openerp.addons.decimal_precision as dp
 import logging
 import time
 import math
-
 from openerp import fields, api
 from openerp.osv import fields, osv
 from openerp.tools.translate import _
@@ -113,7 +112,7 @@ class stock_move_tolerance(osv.osv_memory):
             tolerance = self.browse(cr, uid, ids, context=context)
 
             # calculate 实运差额
-            if move.product_qty > tolerance.product_qty:
+            if move.product_qty > tolerance.product_qty and move.product_qty - tolerance.product_qty < 0.0001:
                 product_obj = self.pool.get('product.template')
                 product_ids = product_obj.get_or_create_product(cr, SUPERUSER_ID, {'name': '实运差额', 'type': 'service'},
                                                                 context=context)
